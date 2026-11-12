@@ -9,6 +9,8 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
 import { Field } from '@/src/components/Field';
+import { NavAction, NavBar } from '@/src/components/Header';
+import { Icon } from '@/src/components/Icon';
 import { Screen } from '@/src/components/Screen';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { acceptInvite } from '@/src/features/invite/api';
@@ -18,7 +20,7 @@ import { buildCatalogSphereImages } from '@/src/features/skills/skillImages';
 import { deviceTimezone } from '@/src/lib/timezone';
 import { useInviteStore } from '@/src/stores/invite';
 import { useOnboardingStore } from '@/src/stores/onboarding';
-import { fonts, useTheme } from '@/src/theme';
+import { fonts, GUTTER, useTheme } from '@/src/theme';
 
 const STEPS = ['Your name', 'Your skills', 'Your people', 'Your reminder'] as const;
 
@@ -116,17 +118,47 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <Screen scroll contentStyle={styles.content}>
+    <Screen
+      scroll
+      contentStyle={styles.content}
+      header={
+        <View>
+          <NavBar
+            onBack={step > 0 ? () => setStep(step - 1) : undefined}
+            right={step === 2 ? <NavAction label="Skip" tone="muted" onPress={() => setStep(3)} /> : null}
+          />
+          <View
+            style={styles.progress}
+            accessibilityRole="progressbar"
+            accessibilityLabel={`Step ${step + 1} of ${STEPS.length}: ${STEPS[step]}`}
+          >
+            {STEPS.map((name, i) => (
+              <View key={name} style={[styles.progressSeg, { backgroundColor: i <= step ? colors.accent : colors.surface3 }]} />
+            ))}
+          </View>
+        </View>
+      }
+      footer={
+        <Button
+          title={step === STEPS.length - 1 ? 'Start larping' : 'Continue'}
+          size="lg"
+          loading={complete.isPending}
+          disabled={!canContinue}
+          onPress={() => (step === STEPS.length - 1 ? finish() : setStep(step + 1))}
+        />
+      }
+    >
       {pendingInvite ? (
         <View style={[styles.inviteBanner, { backgroundColor: colors.primarySoft }]}>
+          <Icon name="ticket" size={18} color={colors.accentStrong} />
           <Text style={[styles.inviteText, { color: colors.ink }]}>
-            🎟️ Invited by @{pendingInvite.from}
-            {pendingInvite.skill ? ' — their skill is pre-picked for you.' : ''}
+            Invited by @{pendingInvite.from}
+            {pendingInvite.skill ? '. Their skill is pre-picked for you.' : ''}
           </Text>
         </View>
       ) : null}
       <Text style={[styles.stepLabel, { color: colors.muted }]}>
-        Step {step + 1} of {STEPS.length} · {STEPS[step]}
+        Step {step + 1} of {STEPS.length}
       </Text>
 
       {step === 0 && (
@@ -242,31 +274,19 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      <View style={styles.nav}>
-        {step > 0 && (
-          <Button title="Back" variant="ghost" size="sm" onPress={() => setStep(step - 1)} style={styles.backBtn} />
-        )}
-        <Button
-          title={step === STEPS.length - 1 ? 'Start larping' : 'Continue'}
-          loading={complete.isPending}
-          disabled={!canContinue}
-          onPress={() => (step === STEPS.length - 1 ? finish() : setStep(step + 1))}
-        />
-        {step === 2 && (
-          <Button title="Skip for now" variant="ghost" size="sm" onPress={() => setStep(3)} style={styles.skipBtn} />
-        )}
-      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingTop: 24, paddingBottom: 24 },
-  stepLabel: { fontFamily: fonts.body, fontSize: 13, marginBottom: 18 },
-  inviteBanner: { borderRadius: 14, padding: 12, marginBottom: 14 },
-  inviteText: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19 },
+  content: { paddingTop: 20, paddingBottom: 24 },
+  progress: { flexDirection: 'row', gap: 6, paddingHorizontal: GUTTER, paddingTop: 4, paddingBottom: 8 },
+  progressSeg: { flex: 1, height: 4, borderRadius: 2 },
+  stepLabel: { fontFamily: fonts.bodyMedium, fontSize: 13, marginBottom: 8 },
+  inviteBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 16, padding: 14, marginBottom: 18 },
+  inviteText: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19 },
   step: { gap: 14 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 30 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 36, letterSpacing: -1.1 },
   body: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22 },
   group: { gap: 8 },
   groupLabel: { fontFamily: fonts.bodyBold, fontSize: 14, letterSpacing: -0.15 },
@@ -275,7 +295,4 @@ const styles = StyleSheet.create({
   personText: { flex: 1, minWidth: 0 },
   personName: { fontFamily: fonts.bodyBold, fontSize: 15 },
   personBio: { fontFamily: fonts.body, fontSize: 13 },
-  nav: { marginTop: 28, gap: 10 },
-  backBtn: { alignSelf: 'flex-start' },
-  skipBtn: { alignSelf: 'center' },
 });

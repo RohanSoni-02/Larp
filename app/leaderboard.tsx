@@ -1,11 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { LeaderboardCard } from '@/components/ui/leaderboard-card';
 import { Button } from '@/src/components/Button';
-import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
+import { EmptyState } from '@/src/components/EmptyState';
+import { NavBar } from '@/src/components/Header';
+import { Skeleton } from '@/src/components/Skeleton';
 import { Seg } from '@/src/components/Seg';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useLeaderboard, useMyGuildIds, useSetGuildMember } from '@/src/features/leaderboard/hooks';
@@ -60,13 +62,13 @@ export default function LeaderboardScreen() {
       list.map((r, idx) => ({
         userId: r.userId,
         rank: r.rank || idx + 1,
-        userName: r.userId === meId ? `${r.name} (You)` : r.name,
+        userName: r.name,
         byline: `${tierName(r.tier)} · ${r.sessions} sessions${r.nodesLanded > 0 ? ` · ${r.nodesLanded} landed` : ''}`,
         value: r.minutes,
         displayed: true,
         avatarColor: r.color,
       })),
-    [list, meId],
+    [list],
   );
 
   function openUser(userId: string) {
@@ -75,10 +77,7 @@ export default function LeaderboardScreen() {
   }
 
   return (
-    <Screen scroll>
-      <View style={styles.header}>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
-      </View>
+    <Screen scroll header={<NavBar onBack={() => router.back()} />}>
       <Text style={[styles.kicker, { color: accent }]}>{isGuild ? 'GUILD LEADERBOARD' : 'SKILL LEADERBOARD'}</Text>
       <Text style={[styles.title, { color: colors.ink }]}>{params.title ?? 'Leaderboard'}</Text>
       <Text style={[styles.sub, { color: colors.muted }]}>
@@ -110,15 +109,13 @@ export default function LeaderboardScreen() {
       ) : null}
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} />
+        <View style={{ gap: 10, marginTop: 20 }} accessibilityLabel="Loading leaderboard">
+          <Skeleton height={220} radius={24} />
+          <Skeleton height={56} radius={16} />
+          <Skeleton height={56} radius={16} />
+        </View>
       ) : list.length === 0 ? (
-        <Card style={{ marginTop: 18, alignItems: 'center', paddingVertical: 28 }}>
-          <Text style={{ fontSize: 34 }}>🏁</Text>
-          <Text style={[styles.emptyTitle, { color: colors.ink }]}>No one on the board yet</Text>
-          <Text style={[styles.sub, { color: colors.muted, textAlign: 'center' }]}>
-            Log a session and you’ll take first place.
-          </Text>
-        </Card>
+        <EmptyState icon="podium" title="No one on the board yet" body="Log a session and you’ll take first place." />
       ) : (
         <View style={{ marginTop: 16 }}>
           <LeaderboardCard
@@ -139,15 +136,12 @@ export default function LeaderboardScreen() {
           />
         </View>
       )}
-      <View style={{ height: 30 }} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'flex-start' },
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 1.2, marginTop: 4 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 30, marginTop: 2 },
-  sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 4, lineHeight: 19 },
-  emptyTitle: { fontFamily: fonts.display, fontSize: 18, marginTop: 8 },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 1.2 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1, marginTop: 2 },
+  sub: { fontFamily: fonts.body, fontSize: 14.5, marginTop: 8, lineHeight: 21 },
 });

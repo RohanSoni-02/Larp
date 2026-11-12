@@ -1,12 +1,16 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
-import { Card } from '@/src/components/Card';
+import { Chip } from '@/src/components/Chip';
+import { EmptyState } from '@/src/components/EmptyState';
+import { NavBar } from '@/src/components/Header';
 import { Icon } from '@/src/components/Icon';
+import { PressableScale } from '@/src/components/PressableScale';
 import { Screen } from '@/src/components/Screen';
+import { Skeleton } from '@/src/components/Skeleton';
 import { TierPill } from '@/src/components/TierPill';
 import { useMentors, useRequestFeedback } from '@/src/features/mentorship/hooks';
 import { fonts, useTheme } from '@/src/theme';
@@ -37,38 +41,50 @@ export default function AskMentorScreen() {
   };
 
   return (
-    <Screen scroll>
-      <View style={styles.header}>
-        <Button title="Cancel" variant="ghost" size="sm" onPress={() => router.back()} />
-      </View>
-      <Text style={[styles.title, { color: colors.ink }]}>Ask a mentor</Text>
+    <Screen
+      scroll
+      header={<NavBar onClose={() => router.back()} />}
+      footer={
+        <Button
+          title="Send request"
+          icon="send"
+          size="lg"
+          onPress={send}
+          disabled={!mentorId || !message.trim() || request.isPending}
+          loading={request.isPending}
+        />
+      }
+    >
+      <Text style={[styles.title, { color: colors.ink }]} accessibilityRole="header">
+        Ask a mentor
+      </Text>
       <Text style={[styles.sub, { color: colors.muted }]}>
         Mentors are Adept or Legit larpers who opted in to give feedback. They’ll see this session
         {sessionId ? ' and its clip' : ''}, even if it’s followers-only.
       </Text>
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 30 }} />
+        <View style={{ gap: 8, marginTop: 16 }} accessibilityLabel="Loading mentors">
+          <Skeleton height={68} radius={18} />
+          <Skeleton height={68} radius={18} />
+        </View>
       ) : (mentors ?? []).length === 0 ? (
-        <Card style={{ marginTop: 18 }}>
-          <Text style={[styles.emptyTitle, { color: colors.ink }]}>No mentors yet for this skill</Text>
-          <Text style={[styles.sub, { color: colors.muted }]}>
-            Once someone ahead of you opts in, they’ll show up here.
-          </Text>
-        </Card>
+        <EmptyState compact icon="mentor" title="No mentors yet for this skill" body="Once someone ahead of you opts in, they’ll show up here." />
       ) : (
         <View style={{ gap: 8, marginTop: 16 }}>
           {(mentors ?? []).map((m) => {
             const selected = mentorId === m.userId;
             return (
-              <Pressable
+              <PressableScale
                 key={m.userId}
+                scale={0.98}
                 onPress={() => setMentorId(m.userId)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
+                accessibilityLabel={`${m.name}, ${tierName(m.tier)}`}
                 style={[
                   styles.mentor,
-                  { backgroundColor: colors.surface, borderColor: selected ? colors.primary : colors.line },
+                  { backgroundColor: selected ? colors.accentSoft : colors.surface2, borderColor: selected ? colors.accent : 'transparent' },
                 ]}
               >
                 <Avatar name={m.name} color={m.color} size={42} />
@@ -84,13 +100,13 @@ export default function AskMentorScreen() {
                 <View
                   style={[
                     styles.radio,
-                    { borderColor: selected ? colors.primary : colors.line },
-                    selected && { backgroundColor: colors.primary },
+                    { borderColor: selected ? colors.accent : colors.subtle },
+                    selected && { backgroundColor: colors.accent },
                   ]}
                 >
-                  {selected ? <Icon name="check" size={13} color="#fff" /> : null}
+                  {selected ? <Icon name="check" size={13} color={colors.accentInk} weight="bold" /> : null}
                 </View>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -99,13 +115,7 @@ export default function AskMentorScreen() {
       <Text style={[styles.label, { color: colors.muted }]}>Your question</Text>
       <View style={styles.prompts}>
         {PROMPTS.map((p) => (
-          <Pressable
-            key={p}
-            onPress={() => setMessage(p)}
-            style={[styles.prompt, { backgroundColor: colors.surface2, borderColor: colors.line }]}
-          >
-            <Text style={[styles.promptText, { color: colors.ink }]}>{p}</Text>
-          </Pressable>
+          <Chip key={p} size="sm" label={p} selected={message === p} onPress={() => setMessage(p)} />
         ))}
       </View>
       <TextInput
@@ -114,42 +124,31 @@ export default function AskMentorScreen() {
         maxLength={500}
         multiline
         placeholder="What do you want them to look at?"
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={colors.subtle}
+        selectionColor={colors.accent}
         accessibilityLabel="Your question"
         style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.surface2, color: colors.ink }]}
       />
-      <Text style={[styles.count, { color: colors.muted }]}>{message.length}/500</Text>
+      <Text style={[styles.count, { color: colors.subtle }]}>{message.length}/500</Text>
 
-      <Button
-        title="Send request"
-        onPress={send}
-        disabled={!mentorId || !message.trim() || request.isPending}
-        loading={request.isPending}
-        style={{ marginTop: 12 }}
-      />
-      <View style={{ height: 30 }} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'flex-start' },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 30, marginTop: 4 },
-  sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 6, lineHeight: 20 },
-  emptyTitle: { fontFamily: fonts.display, fontSize: 17 },
-  mentor: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16, borderWidth: 1.5 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1, marginTop: 4 },
+  sub: { fontFamily: fonts.body, fontSize: 14.5, marginTop: 8, lineHeight: 21 },
+  mentor: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 18, borderWidth: 1.5 },
   name: { fontFamily: fonts.bodyBold, fontSize: 15 },
   meta: { fontFamily: fonts.body, fontSize: 12.5, marginTop: 2 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   label: { fontFamily: fonts.bodyBold, fontSize: 14, marginTop: 22, letterSpacing: -0.15 },
   prompts: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-  prompt: { borderRadius: 999, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 6 },
-  promptText: { fontFamily: fonts.body, fontSize: 13 },
   input: {
     borderWidth: 1,
-    borderRadius: 14,
-    padding: 12,
-    minHeight: 96,
+    borderRadius: 16,
+    padding: 14,
+    minHeight: 104,
     marginTop: 10,
     fontFamily: fonts.body,
     fontSize: 15,

@@ -14,13 +14,13 @@ export function Field({ label, hint, onFocus, onBlur, style, ...inputProps }: Fi
   const [focused, setFocused] = useState(false);
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.label, { color: colors.muted }]} nativeID={`label-${label}`}>
+      <Text style={[styles.label, { color: focused ? colors.ink : colors.muted }]} nativeID={`label-${label}`}>
         {label}
       </Text>
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={colors.subtle}
-        selectionColor={colors.ink}
+        selectionColor={colors.accent}
         onFocus={(e) => {
           setFocused(true);
           onFocus?.(e);
@@ -33,8 +33,8 @@ export function Field({ label, hint, onFocus, onBlur, style, ...inputProps }: Fi
           styles.input,
           inputProps.multiline && styles.multiline,
           {
-            backgroundColor: colors.surface2,
-            borderColor: focused ? colors.ink : colors.surface2,
+            backgroundColor: focused ? colors.surface : colors.surface2,
+            borderColor: focused ? colors.accent : colors.surface2,
             color: colors.ink,
           },
           style,
@@ -50,10 +50,10 @@ const styles = StyleSheet.create({
   wrap: { marginBottom: 14 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 13, marginBottom: 7, letterSpacing: -0.05 },
   input: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: 1.5,
     paddingHorizontal: 14,
-    minHeight: 50,
+    minHeight: 52,
     paddingVertical: 13,
     fontFamily: fonts.body,
     fontSize: 16,

@@ -3,8 +3,9 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/src/components/Avatar';
-import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
+import { EmptyState } from '@/src/components/EmptyState';
+import { NavBar } from '@/src/components/Header';
 import { useActivity, useMarkActivityRead } from '@/src/features/activity/hooks';
 import { formatTime } from '@/src/lib/format';
 import { fonts, useTheme } from '@/src/theme';
@@ -48,18 +49,17 @@ export default function ActivityScreen() {
   }, [items?.length]);
 
   return (
-    <Screen scroll>
+    <Screen scroll header={<NavBar onBack={() => router.back()} />}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.ink }]}>Activity</Text>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>Activity</Text>
       </View>
       {(items ?? []).length === 0 ? (
-        <Text style={[styles.empty, { color: colors.muted }]}>Nothing yet. Post a session and the kudos will come.</Text>
+        <EmptyState icon="bell" title="Nothing yet" body="Post a session and the kudos will come." />
       ) : (
         (items ?? []).map((item) => (
           <Pressable
             key={item.id}
-            style={[styles.row, { borderBottomColor: colors.line }]}
+            style={({ pressed }) => [styles.row, { borderBottomColor: colors.line }, pressed && { opacity: 0.6 }]}
             onPress={() => {
               if (item.type === 'larp_check') router.push('/larp-check');
               else if (item.type === 'system' && String(item.data.kind ?? '').startsWith('feedback_')) router.push('/mentorship');
@@ -71,7 +71,7 @@ export default function ActivityScreen() {
               <Text style={[styles.text, { color: colors.ink }]}>{copy(item)}</Text>
               <Text style={[styles.time, { color: colors.muted }]}>{formatTime(item.at)}</Text>
             </View>
-            {item.unread ? <View style={[styles.dot, { backgroundColor: colors.primary }]} /> : null}
+            {item.unread ? <View style={[styles.dot, { backgroundColor: colors.accent }]} accessibilityLabel="Unread" /> : null}
           </Pressable>
         ))
       )}
@@ -82,9 +82,8 @@ export default function ActivityScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 28 },
-  empty: { fontFamily: fonts.body, fontSize: 15, textAlign: 'center', marginTop: 40 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
   text: { fontFamily: fonts.body, fontSize: 15, lineHeight: 20 },
   time: { fontFamily: fonts.body, fontSize: 12.5, marginTop: 2 },
   dot: { width: 9, height: 9, borderRadius: 5 },

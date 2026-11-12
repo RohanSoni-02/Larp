@@ -12,13 +12,13 @@ type EmptyStateProps = {
   compact?: boolean;
 };
 
-/** Outlined glyph, title and one line of guidance — used wherever a list can be empty. */
+/** Tonal glyph tile, title and one line of guidance — used wherever a list can be empty. */
 export function EmptyState({ icon, title, body, action, compact = false }: EmptyStateProps) {
   const { colors } = useTheme();
   return (
     <View style={[styles.wrap, compact && styles.compact]}>
-      <View style={[styles.icon, { borderColor: colors.ink }]}>
-        <Icon name={icon} size={26} color={colors.ink} />
+      <View style={[styles.icon, { backgroundColor: colors.surface2 }]}>
+        <Icon name={icon} size={26} color={colors.muted} />
       </View>
       <Text style={[styles.title, { color: colors.ink }]}>{title}</Text>
       {body ? <Text style={[styles.body, { color: colors.muted }]}>{body}</Text> : null}
@@ -31,15 +31,14 @@ const styles = StyleSheet.create({
   wrap: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 32 },
   compact: { paddingVertical: 24 },
   icon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 1.5,
+    width: 64,
+    height: 64,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
   },
   title: { fontFamily: fonts.display, fontSize: 17, letterSpacing: -0.35, textAlign: 'center' },
-  body: { fontFamily: fonts.body, fontSize: 14.5, textAlign: 'center', marginTop: 6, lineHeight: 20 },
+  body: { fontFamily: fonts.body, fontSize: 14.5, textAlign: 'center', marginTop: 6, lineHeight: 20, maxWidth: 300 },
   action: { marginTop: 16 },
 });

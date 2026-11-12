@@ -11,9 +11,12 @@ import { Icon } from '@/src/components/Icon';
 import { IconButton } from '@/src/components/IconButton';
 import { LiveDot } from '@/src/components/LiveDot';
 import { PostCard } from '@/src/components/PostCard';
+import { PressableScale } from '@/src/components/PressableScale';
 import { Scrim } from '@/src/components/Scrim';
 import { Screen } from '@/src/components/Screen';
 import { Seg } from '@/src/components/Seg';
+import { PostSkeleton } from '@/src/components/Skeleton';
+import { Wordmark } from '@/src/components/Wordmark';
 import { useUnreadCount } from '@/src/features/activity/hooks';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useMyCheck, useTodayWindow } from '@/src/features/larpcheck/hooks';
@@ -31,18 +34,6 @@ function useSecondsLeft(firedAt: string | undefined): number {
   const now = useNow();
   if (!firedAt) return 0;
   return Math.max(0, Math.floor(120 - (now - new Date(firedAt).getTime()) / 1000));
-}
-
-function Wordmark() {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.wordmarkRow} accessibilityRole="header" accessibilityLabel="Larping">
-      <View style={[styles.logo, { backgroundColor: colors.accent }]}>
-        <Text style={[styles.logoText, { color: colors.accentInk }]}>L</Text>
-      </View>
-      <Text style={[styles.wordmark, { color: colors.ink }]}>larping</Text>
-    </View>
-  );
 }
 
 function LarpBanner({ live, firedAt, secondsLeft }: { live: boolean; firedAt: string; secondsLeft: number }) {
@@ -72,18 +63,17 @@ function LarpBanner({ live, firedAt, secondsLeft }: { live: boolean; firedAt: st
           ? '2 minutes to show what you’re practising. No retakes, no pretending.'
           : 'Post yours to unblur everyone else’s — it’ll be marked late.'}
       </Text>
-      <Pressable
+      <PressableScale
         onPress={() => router.push('/larp-check')}
+        scale={0.975}
+        pressedOpacity={0.92}
         accessibilityRole="button"
         accessibilityLabel={live ? 'Post your Larp Check' : 'Post late'}
-        style={({ pressed }) => [
-          styles.bannerBtn,
-          { backgroundColor: colors.accent, opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
-        ]}
+        style={[styles.bannerBtn, { backgroundColor: colors.accent }]}
       >
         <Icon name="camera" size={18} color={colors.accentInk} />
         <Text style={[styles.bannerBtnText, { color: colors.accentInk }]}>{live ? 'Post your Larp Check' : 'Post late'}</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
@@ -109,9 +99,9 @@ function TodayTile({
   onPress: () => void;
   accessibilityLabel: string;
 }) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   return (
-    <Pressable style={styles.story} onPress={onPress} accessibilityLabel={accessibilityLabel}>
+    <PressableScale style={styles.story} scale={0.95} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
       <View style={[styles.tileRing, { borderColor: ring ? colors.accent : 'transparent' }]}>
         <View style={[styles.tile, { backgroundColor: colors.surface2 }]}>
           <Art seed={seed} color={skillColor} quality={0.7} aspectRatio={66 / 90} style={StyleSheet.absoluteFill} />
@@ -125,7 +115,7 @@ function TodayTile({
       <Text style={[styles.storyName, { color: ring ? colors.ink : colors.muted }]} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -163,7 +153,7 @@ function StoriesRow({
           accessibilityLabel="Your story"
         />
       ) : (
-        <Pressable style={styles.story} onPress={() => router.push('/session/new')} accessibilityLabel="Add today’s practice">
+        <PressableScale style={styles.story} scale={0.95} onPress={() => router.push('/session/new')} accessibilityRole="button" accessibilityLabel="Add today’s practice">
           <View style={[styles.tileRing, { borderColor: 'transparent' }]}>
             <View style={[styles.tile, styles.addTile, { borderColor: colors.subtle, backgroundColor: colors.surface }]}>
               <View style={[styles.addIcon, { backgroundColor: colors.accent }]}>
@@ -174,7 +164,7 @@ function StoriesRow({
           <Text style={[styles.storyName, { color: colors.ink }]} numberOfLines={1}>
             Add today
           </Text>
-        </Pressable>
+        </PressableScale>
       )}
 
       {others.map((g) => (
@@ -285,7 +275,7 @@ export default function HomeScreen() {
 
   const feedTab = useUiStore((s) => s.feedTab);
   const setFeedTab = useUiStore((s) => s.setFeedTab);
-  const { data: feed } = useFeed();
+  const { data: feed, isLoading: feedLoading } = useFeed();
   const { data: storyPosts } = useStoryPosts();
 
   const level = levelFromXp(profile?.xp_total ?? 0);
@@ -377,7 +367,12 @@ export default function HomeScreen() {
         />
       </View>
 
-      {posts.length === 0 ? (
+      {feedLoading ? (
+        <>
+          <PostSkeleton />
+          <PostSkeleton />
+        </>
+      ) : posts.length === 0 ? (
         <EmptyState
           icon="people"
           title={feedTab === 'following' ? 'Your feed is quiet' : 'Nothing here yet'}
@@ -400,10 +395,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  wordmarkRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logo: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontFamily: fonts.numHeavy, fontSize: 21, lineHeight: 24, marginTop: 1 },
-  wordmark: { fontFamily: fonts.displayHeavy, fontSize: 27, letterSpacing: -1.1, lineHeight: 31 },
   lcPill: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 10, height: 28, marginRight: 4 },
   lcPillText: { fontFamily: fonts.num, fontSize: 16, fontVariant: ['tabular-nums'] },
   levelPill: {
@@ -437,7 +428,7 @@ const styles = StyleSheet.create({
   tileAvatar: { position: 'absolute', left: 6, bottom: 6, borderRadius: 11, borderWidth: 1.5, borderColor: '#FFFFFF' },
   storyName: { fontFamily: fonts.bodyMedium, fontSize: 12, maxWidth: 74, letterSpacing: -0.05 },
   section: { paddingHorizontal: GUTTER, paddingTop: 12, gap: 10 },
-  banner: { borderRadius: 20, padding: 18, gap: 14 },
+  banner: { borderRadius: 24, padding: 18, gap: 14 },
   bannerHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   bannerIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   bannerTitle: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 24, letterSpacing: -0.55 },
@@ -455,7 +446,7 @@ const styles = StyleSheet.create({
   bannerSub: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
   bannerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 50, borderRadius: 999 },
   bannerBtnText: { fontFamily: fonts.bodyBold, fontSize: 15.5, letterSpacing: -0.2 },
-  streak: { borderRadius: 20, padding: 16 },
+  streak: { borderRadius: 24, padding: 18 },
   streakTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   streakCountRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   streakNum: { fontFamily: fonts.numHeavy, fontSize: 44, lineHeight: 46, fontVariant: ['tabular-nums'] },
@@ -467,5 +458,5 @@ const styles = StyleSheet.create({
   weekDay: { alignItems: 'center', gap: 6 },
   weekLetter: { fontFamily: fonts.bodyMedium, fontSize: 11.5 },
   weekDot: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  tabs: { marginTop: 14 },
+  tabs: { marginTop: 16 },
 });

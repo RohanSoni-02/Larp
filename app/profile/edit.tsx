@@ -1,8 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
+import { Field } from '@/src/components/Field';
+import { NavBar } from '@/src/components/Header';
 import { Screen } from '@/src/components/Screen';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useMyProfile, useUpdateProfile } from '@/src/features/profile/hooks';
@@ -14,11 +17,8 @@ export default function EditProfileScreen() {
   const userId = session?.user?.id;
   const { data: profile } = useMyProfile(userId);
 
-  return (
-    <Screen scroll>
-      {profile ? <EditForm key={profile.id} profile={profile} userId={profile.id} /> : null}
-    </Screen>
-  );
+  if (!profile) return <Screen header={<NavBar title="Edit profile" onClose={() => router.back()} />}>{null}</Screen>;
+  return <EditForm key={profile.id} profile={profile} userId={profile.id} />;
 }
 
 function EditForm({ profile, userId }: { profile: Profile; userId: string }) {
@@ -38,35 +38,29 @@ function EditForm({ profile, userId }: { profile: Profile; userId: string }) {
     );
   };
 
-  const inputStyle = [styles.input, { backgroundColor: colors.surface2, borderColor: colors.surface2, color: colors.ink }] as const;
-
   return (
-    <View>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.ink }]}>Edit profile</Text>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
+    <Screen
+      scroll
+      header={<NavBar title="Edit profile" onClose={() => router.back()} />}
+      footer={<Button title="Save" size="lg" onPress={save} disabled={!name.trim() || update.isPending} loading={update.isPending} />}
+    >
+      <View style={styles.identity}>
+        <Avatar name={name.trim() || profile.display_name} color={profile.avatar_color} size={88} />
+        <Text style={[styles.handle, { color: colors.muted }]}>@{profile.handle}</Text>
       </View>
-      <Text style={[styles.label, { color: colors.muted }]}>Display name</Text>
-      <TextInput value={name} onChangeText={setName} style={inputStyle} accessibilityLabel="Display name" />
-      <Text style={[styles.label, { color: colors.muted }]}>Bio</Text>
-      <TextInput
+      <Field label="Display name" value={name} onChangeText={setName} autoComplete="name" />
+      <Field
+        label="Bio"
         value={bio}
         onChangeText={setBio}
         multiline
         placeholder="What are you learning, and why?"
-        placeholderTextColor={colors.muted}
-        style={[inputStyle, styles.bio]}
-        accessibilityLabel="Bio"
       />
-      <Button title="Save" onPress={save} disabled={!name.trim() || update.isPending} loading={update.isPending} style={{ marginTop: 20 }} />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 28 },
-  label: { fontFamily: fonts.bodyBold, fontSize: 14, letterSpacing: -0.15, marginTop: 14, marginBottom: 8 },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11, fontFamily: fonts.body, fontSize: 15 },
-  bio: { minHeight: 90, textAlignVertical: 'top' },
+  identity: { alignItems: 'center', gap: 10, paddingTop: 8, paddingBottom: 22 },
+  handle: { fontFamily: fonts.bodyMedium, fontSize: 14 },
 });

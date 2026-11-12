@@ -1,10 +1,15 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { NavBar } from '@/src/components/Header';
+import { Icon, type AppIconName } from '@/src/components/Icon';
+import { PressableScale } from '@/src/components/PressableScale';
 import { Screen } from '@/src/components/Screen';
+import { Skeleton } from '@/src/components/Skeleton';
+import { Stepper } from '@/src/components/Stepper';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import type { LarpCheckPrefs } from '@/src/features/larpcheck/api';
 import { useLarpCheckPrefs, useSaveLarpCheckPrefs } from '@/src/features/larpcheck/hooks';
@@ -18,13 +23,13 @@ const MIN_GAP = 60;
 const WEEKDAYS = [1, 2, 3, 4, 5];
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
-const PRESETS: { label: string; emoji: string; days: number[]; start: number; end: number }[] = [
-  { label: 'Mornings', emoji: '🌅', days: ALL_DAYS, start: 7 * 60, end: 10 * 60 },
-  { label: 'Lunch break', emoji: '🥪', days: WEEKDAYS, start: 12 * 60, end: 14 * 60 },
-  { label: 'After work', emoji: '🏠', days: WEEKDAYS, start: 17 * 60 + 30, end: 21 * 60 },
-  { label: 'Evenings', emoji: '🌙', days: ALL_DAYS, start: 19 * 60, end: 23 * 60 },
-  { label: 'Weekends', emoji: '🎉', days: [0, 6], start: 10 * 60, end: 20 * 60 },
-  { label: 'Any time', emoji: '⚡', days: ALL_DAYS, start: 9 * 60, end: 21 * 60 },
+const PRESETS: { label: string; icon: AppIconName; days: number[]; start: number; end: number }[] = [
+  { label: 'Mornings', icon: 'sunrise', days: ALL_DAYS, start: 7 * 60, end: 10 * 60 },
+  { label: 'Lunch break', icon: 'cup', days: WEEKDAYS, start: 12 * 60, end: 14 * 60 },
+  { label: 'After work', icon: 'home', days: WEEKDAYS, start: 17 * 60 + 30, end: 21 * 60 },
+  { label: 'Evenings', icon: 'moon', days: ALL_DAYS, start: 19 * 60, end: 23 * 60 },
+  { label: 'Weekends', icon: 'sun', days: [0, 6], start: 10 * 60, end: 20 * 60 },
+  { label: 'Any time', icon: 'bolt', days: ALL_DAYS, start: 9 * 60, end: 21 * 60 },
 ];
 
 function formatMinute(m: number): string {
@@ -39,13 +44,19 @@ function formatMinute(m: number): string {
 export default function LarpCheckSettingsScreen() {
   const { data: prefs, isLoading } = useLarpCheckPrefs();
   return (
-    <Screen scroll>
+    <>
       {isLoading || !prefs ? (
-        <ActivityIndicator style={{ marginTop: 60 }} />
+        <Screen header={<NavBar onClose={() => router.back()} />}>
+          <View style={{ gap: 14, paddingTop: 8 }} accessibilityLabel="Loading schedule">
+            <Skeleton width="75%" height={32} radius={10} />
+            <Skeleton height={64} radius={18} />
+            <Skeleton height={150} radius={18} />
+          </View>
+        </Screen>
       ) : (
         <PrefsForm key={JSON.stringify(prefs)} initial={prefs} />
       )}
-    </Screen>
+    </>
   );
 }
 
@@ -116,15 +127,29 @@ function PrefsForm({ initial }: { initial: LarpCheckPrefs }) {
             : `on ${form.days.map((d) => DAY_NAMES[d]!.slice(0, 3)).join(', ')}`;
 
   return (
-    <>
-      <View style={styles.header}>
-        <Button title="Cancel" variant="ghost" size="sm" onPress={() => router.back()} />
+    <Screen
+      scroll
+      header={<NavBar onClose={() => router.back()} />}
+      footer={
+        <Button
+          title="Save schedule"
+          size="lg"
+          onPress={submit}
+          disabled={!dirty || !canSave || save.isPending}
+          loading={save.isPending}
+        />
+      }
+    >
+      <View style={styles.kickerRow}>
+        <Icon name="bolt" filled size={13} color={colors.accentStrong} />
+        <Text style={[styles.kicker, { color: colors.accentStrong }]}>LARP CHECK</Text>
       </View>
-      <Text style={[styles.kicker, { color: colors.primary }]}>⚡ LARP CHECK</Text>
-      <Text style={[styles.title, { color: colors.ink }]}>Your check, your schedule</Text>
+      <Text style={[styles.title, { color: colors.ink }]} accessibilityRole="header">
+        Your check, your schedule
+      </Text>
       <Text style={[styles.sub, { color: colors.muted }]}>
         Once a day we’ll ping you at a random moment inside your window. Two minutes to show what you’re working on.
-        You never see the exact time — that’s the fun.
+        You never see the exact time. That’s the fun.
       </Text>
 
       <Card style={styles.switchRow}>
@@ -135,7 +160,7 @@ function PrefsForm({ initial }: { initial: LarpCheckPrefs }) {
         <Switch
           value={form.enabled}
           onValueChange={(enabled) => setForm((f) => ({ ...f, enabled }))}
-          trackColor={{ true: colors.primary, false: colors.line }}
+          trackColor={{ true: colors.good, false: colors.surface3 }}
           accessibilityLabel="Surprise Larp Checks"
         />
       </Card>
@@ -146,22 +171,24 @@ function PrefsForm({ initial }: { initial: LarpCheckPrefs }) {
           {PRESETS.map((p) => {
             const on = activePreset?.label === p.label;
             return (
-              <Pressable
+              <PressableScale
                 key={p.label}
+                scale={0.96}
                 onPress={() => setForm((f) => ({ ...f, days: p.days, startMinute: p.start, endMinute: p.end }))}
                 style={[
                   styles.preset,
-                  { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.line },
+                  { backgroundColor: on ? colors.accentSoft : colors.surface2, borderColor: on ? colors.accent : 'transparent' },
                 ]}
                 accessibilityRole="button"
                 accessibilityState={{ selected: on }}
+                accessibilityLabel={`${p.label}, ${formatMinute(p.start)} to ${formatMinute(p.end)}`}
               >
-                <Text style={{ fontSize: 20 }}>{p.emoji}</Text>
+                <Icon name={p.icon} size={20} color={on ? colors.accentStrong : colors.ink} />
                 <Text style={[styles.presetLabel, { color: colors.ink }]}>{p.label}</Text>
                 <Text style={[styles.presetMeta, { color: colors.muted }]}>
                   {formatMinute(p.start)}–{formatMinute(p.end)}
                 </Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -171,16 +198,17 @@ function PrefsForm({ initial }: { initial: LarpCheckPrefs }) {
           {DAY_LABELS.map((l, d) => {
             const on = form.days.includes(d);
             return (
-              <Pressable
+              <PressableScale
                 key={d}
+                scale={0.9}
                 onPress={() => toggleDay(d)}
-                style={[styles.day, { backgroundColor: on ? colors.ink : colors.fill, borderColor: 'transparent' }]}
+                style={[styles.day, { backgroundColor: on ? colors.ink : colors.fill }]}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: on }}
                 accessibilityLabel={DAY_NAMES[d]}
               >
                 <Text style={[styles.dayText, { color: on ? colors.bg : colors.ink }]}>{l}</Text>
-              </Pressable>
+              </PressableScale>
             );
           })}
         </View>
@@ -192,7 +220,8 @@ function PrefsForm({ initial }: { initial: LarpCheckPrefs }) {
           <TimeStepper label="Not after" value={form.endMinute} onShift={shiftEnd} />
         </Card>
 
-        <View style={[styles.summary, { backgroundColor: colors.surface2 }]}>
+        <View style={[styles.summary, { backgroundColor: colors.accentSoft }]}>
+          <Icon name="bolt" filled size={16} color={colors.accentStrong} />
           <Text style={[styles.summaryText, { color: colors.ink }]}>
             One check {daySummary}, sometime between{' '}
             <Text style={{ fontFamily: fonts.bodyBold }}>{formatMinute(form.startMinute)}</Text> and{' '}
@@ -200,16 +229,7 @@ function PrefsForm({ initial }: { initial: LarpCheckPrefs }) {
           </Text>
         </View>
       </View>
-
-      <Button
-        title="Save schedule"
-        onPress={submit}
-        disabled={!dirty || !canSave || save.isPending}
-        loading={save.isPending}
-        style={{ marginTop: 18 }}
-      />
-      <View style={{ height: 30 }} />
-    </>
+    </Screen>
   );
 }
 
@@ -217,47 +237,36 @@ function TimeStepper({ label, value, onShift }: { label: string; value: number; 
   const { colors } = useTheme();
   return (
     <View style={styles.stepper}>
-      <Text style={[styles.rowTitle, { color: colors.muted, flex: 1 }]}>{label}</Text>
-      <Pressable
-        onPress={() => onShift(-STEP)}
-        style={[styles.stepBtn, { backgroundColor: colors.surface2 }]}
-        accessibilityLabel={`${label} earlier`}
-      >
-        <Text style={[styles.stepText, { color: colors.ink }]}>−</Text>
-      </Pressable>
-      <Text style={[styles.time, { color: colors.ink }]}>{formatMinute(value)}</Text>
-      <Pressable
-        onPress={() => onShift(STEP)}
-        style={[styles.stepBtn, { backgroundColor: colors.surface2 }]}
-        accessibilityLabel={`${label} later`}
-      >
-        <Text style={[styles.stepText, { color: colors.ink }]}>+</Text>
-      </Pressable>
+      <Text style={[styles.rowTitle, { color: colors.ink, flex: 1 }]}>{label}</Text>
+      <Stepper
+        label={label}
+        value={formatMinute(value)}
+        valueWidth={86}
+        onDecrement={() => onShift(-STEP)}
+        onIncrement={() => onShift(STEP)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'flex-start' },
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 12.5, letterSpacing: 1.2, marginTop: 4 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 28, marginTop: 2 },
-  sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 6, lineHeight: 20 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 1.2 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1, marginTop: 6 },
+  sub: { fontFamily: fonts.body, fontSize: 14.5, marginTop: 8, lineHeight: 21 },
   switchRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18 },
   rowTitle: { fontFamily: fonts.bodyBold, fontSize: 15 },
   rowSub: { fontFamily: fonts.body, fontSize: 13, marginTop: 2 },
   label: { fontFamily: fonts.bodyBold, fontSize: 14, marginTop: 22, marginBottom: 10, letterSpacing: -0.15 },
   presets: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  preset: { width: '31.5%', borderRadius: 16, borderWidth: 1.5, padding: 10, gap: 2 },
-  presetLabel: { fontFamily: fonts.bodyBold, fontSize: 13.5, marginTop: 2 },
+  preset: { width: '31.5%', borderRadius: 18, borderWidth: 1.5, padding: 12, gap: 2 },
+  presetLabel: { fontFamily: fonts.bodyBold, fontSize: 13.5, marginTop: 6 },
   presetMeta: { fontFamily: fonts.body, fontSize: 11.5 },
   days: { flexDirection: 'row', justifyContent: 'space-between' },
-  day: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  day: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   dayText: { fontFamily: fonts.bodyBold, fontSize: 15 },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stepBtn: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  stepText: { fontFamily: fonts.bodyBold, fontSize: 20 },
-  time: { fontFamily: fonts.display, fontSize: 17, minWidth: 84, textAlign: 'center' },
   divider: { height: StyleSheet.hairlineWidth },
-  summary: { borderRadius: 14, padding: 12, marginTop: 14 },
-  summaryText: { fontFamily: fonts.body, fontSize: 14.5, lineHeight: 20 },
+  summary: { flexDirection: 'row', gap: 10, borderRadius: 16, padding: 14, marginTop: 14 },
+  summaryText: { flex: 1, fontFamily: fonts.body, fontSize: 14.5, lineHeight: 20 },
 });

@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Field } from '@/src/components/Field';
-import { Icon } from '@/src/components/Icon';
+import { NavBar } from '@/src/components/Header';
+import { IconButton } from '@/src/components/IconButton';
+import { Stepper } from '@/src/components/Stepper';
 import { Screen } from '@/src/components/Screen';
 import { isValidPlan, planMinutes, type TemplateBlock } from '@/src/features/templates/blocks';
 import { useDeleteTemplate, useMyTemplates, useSaveTemplate } from '@/src/features/templates/hooks';
@@ -43,55 +45,64 @@ export default function TemplateEditorScreen() {
     );
 
   return (
-    <Screen scroll>
-      <View style={styles.header}>
-        <Button title="Cancel" variant="ghost" size="sm" onPress={() => router.back()} />
-      </View>
-      <Text style={[styles.title, { color: colors.ink }]}>New template</Text>
+    <Screen
+      scroll
+      header={<NavBar onClose={() => router.back()} />}
+      footer={
+        <Button
+          title={`Save template · ${planMinutes(plan)} min`}
+          size="lg"
+          onPress={submit}
+          disabled={!valid || save.isPending}
+          loading={save.isPending}
+        />
+      }
+    >
+      <Text style={[styles.title, { color: colors.ink }]} accessibilityRole="header">
+        New template
+      </Text>
       <Text style={[styles.sub, { color: colors.muted }]}>
         Split practice into blocks. You’ll get a buzz and a notification when each one ends.
       </Text>
 
       <View style={{ marginTop: 16 }}>
-        <Field label="Name" value={name} onChangeText={setName} maxLength={40} placeholder="e.g. Scales → Song → Improv" />
+        <Field label="Name" value={name} onChangeText={setName} maxLength={40} placeholder="e.g. Scales, song, improv" />
       </View>
 
       <View style={{ gap: 8, marginTop: 8 }}>
         {blocks.map((b, i) => (
           <Card key={i} variant="flat" style={styles.block}>
-            <Text style={[styles.index, { color: colors.muted }]}>{i + 1}</Text>
+            <View style={[styles.index, { backgroundColor: colors.surface3 }]}>
+              <Text style={[styles.indexText, { color: colors.ink }]}>{i + 1}</Text>
+            </View>
             <TextInput
               value={b.label}
               onChangeText={(label) => patch(i, { label })}
               maxLength={24}
               placeholder="Block name"
-              placeholderTextColor={colors.muted}
+              placeholderTextColor={colors.subtle}
+              selectionColor={colors.accent}
               accessibilityLabel={`Block ${i + 1} name`}
               style={[styles.blockInput, { color: colors.ink }]}
             />
-            <Pressable
-              onPress={() => patch(i, { minutes: Math.max(STEP, b.minutes - STEP) })}
-              style={[styles.step, { backgroundColor: colors.surface2 }]}
-              accessibilityLabel={`Shorten block ${i + 1}`}
-            >
-              <Text style={[styles.stepText, { color: colors.ink }]}>−</Text>
-            </Pressable>
-            <Text style={[styles.mins, { color: colors.ink }]}>{b.minutes}m</Text>
-            <Pressable
-              onPress={() => patch(i, { minutes: Math.min(180, b.minutes + STEP) })}
-              style={[styles.step, { backgroundColor: colors.surface2 }]}
-              accessibilityLabel={`Lengthen block ${i + 1}`}
-            >
-              <Text style={[styles.stepText, { color: colors.ink }]}>+</Text>
-            </Pressable>
+            <Stepper
+              label={`block ${i + 1} length`}
+              value={`${b.minutes}m`}
+              valueWidth={44}
+              canDecrement={b.minutes > STEP}
+              canIncrement={b.minutes < 180}
+              onDecrement={() => patch(i, { minutes: Math.max(STEP, b.minutes - STEP) })}
+              onIncrement={() => patch(i, { minutes: Math.min(180, b.minutes + STEP) })}
+            />
             {blocks.length > 1 ? (
-              <Pressable
+              <IconButton
+                name="close"
+                size={15}
+                color={colors.muted}
                 onPress={() => setBlocks((bs) => bs.filter((_, j) => j !== i))}
-                hitSlop={8}
                 accessibilityLabel={`Remove block ${i + 1}`}
-              >
-                <Icon name="close" size={16} color={colors.muted} />
-              </Pressable>
+                style={styles.remove}
+              />
             ) : null}
           </Card>
         ))}
@@ -99,21 +110,14 @@ export default function TemplateEditorScreen() {
 
       {blocks.length < 12 ? (
         <Button
-          title="+ Add block"
-          variant="ghost"
+          title="Add block"
+          icon="plus"
+          variant="secondary"
           size="sm"
           onPress={() => setBlocks((bs) => [...bs, { label: 'Play', minutes: 10 }])}
-          style={{ alignSelf: 'flex-start', marginTop: 8 }}
+          style={{ alignSelf: 'flex-start', marginTop: 10 }}
         />
       ) : null}
-
-      <Button
-        title={`Save template · ${planMinutes(plan)} min`}
-        onPress={submit}
-        disabled={!valid || save.isPending}
-        loading={save.isPending}
-        style={{ marginTop: 14 }}
-      />
 
       {(saved ?? []).length > 0 ? (
         <>
@@ -123,29 +127,26 @@ export default function TemplateEditorScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.savedName, { color: colors.ink }]}>{t.name}</Text>
                 <Text style={[styles.savedMeta, { color: colors.muted }]}>
-                  {t.blocks.map((b) => `${b.label} ${b.minutes}m`).join(' → ')}
+                  {t.blocks.map((b) => `${b.label} ${b.minutes}m`).join(' · ')}
                 </Text>
               </View>
-              <Button title="Delete" variant="ghost" size="sm" onPress={() => remove.mutate(t.id)} />
+              <Button title="Delete" variant="danger" size="sm" onPress={() => remove.mutate(t.id)} />
             </View>
           ))}
         </>
       ) : null}
-      <View style={{ height: 30 }} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'flex-start' },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 30, marginTop: 4 },
-  sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 6, lineHeight: 20 },
-  block: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12 },
-  index: { fontFamily: fonts.display, fontSize: 15, width: 18 },
-  blockInput: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 15, paddingVertical: 4 },
-  step: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  stepText: { fontFamily: fonts.bodyBold, fontSize: 18 },
-  mins: { fontFamily: fonts.display, fontSize: 15, minWidth: 38, textAlign: 'center' },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1, marginTop: 4 },
+  sub: { fontFamily: fonts.body, fontSize: 14.5, marginTop: 8, lineHeight: 21 },
+  block: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingLeft: 12, paddingRight: 8 },
+  index: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  indexText: { fontFamily: fonts.num, fontSize: 14 },
+  blockInput: { flex: 1, minWidth: 0, fontFamily: fonts.bodyBold, fontSize: 15, paddingVertical: 4 },
+  remove: { width: 28, height: 34 },
   sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 14, marginTop: 26, letterSpacing: -0.15 },
   savedRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
   savedName: { fontFamily: fonts.bodyBold, fontSize: 15 },

@@ -46,12 +46,13 @@ function RootNavigator() {
   const { session, isLoading } = useSession();
   const { data: profile, isLoading: profileLoading } = useMyProfile(session?.user?.id);
   const segments = useSegments();
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
 
   if (isLoading || (session && profileLoading)) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator accessibilityLabel="Loading" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <ActivityIndicator color={colors.muted} accessibilityLabel="Loading" />
       </View>
     );
   }
@@ -71,7 +72,7 @@ function RootNavigator() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <NotificationBridge userId={session?.user?.id} />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen

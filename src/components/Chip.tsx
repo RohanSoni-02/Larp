@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Icon, type AppIconName } from '@/src/components/Icon';
+import { PressableScale } from '@/src/components/PressableScale';
 import { fonts, useTheme } from '@/src/theme';
 
 type ChipProps = {
@@ -17,20 +18,14 @@ export function Chip({ label, selected, onPress, color, icon, size = 'md' }: Chi
   const { colors } = useTheme();
   const fg = selected ? colors.bg : colors.ink;
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scale={0.95}
+      pressedOpacity={0.8}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.chip,
-        size === 'sm' && styles.sm,
-        {
-          backgroundColor: selected ? colors.ink : colors.fill,
-          opacity: pressed ? 0.75 : 1,
-          transform: [{ scale: pressed ? 0.97 : 1 }],
-        },
-      ]}
+      style={[styles.chip, size === 'sm' && styles.sm, { backgroundColor: selected ? colors.ink : colors.fill }]}
     >
       {icon ? (
         <Icon name={icon} size={size === 'sm' ? 13 : 15} color={fg} weight="semibold" />
@@ -40,7 +35,7 @@ export function Chip({ label, selected, onPress, color, icon, size = 'md' }: Chi
       <Text style={[styles.label, size === 'sm' && styles.labelSm, { color: fg }]} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
