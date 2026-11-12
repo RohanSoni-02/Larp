@@ -1,0 +1,153 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+
+import { LeaderboardCard } from '@/components/ui/leaderboard-card';
+import { Button } from '@/src/components/Button';
+import { Card } from '@/src/components/Card';
+import { Screen } from '@/src/components/Screen';
+import { Seg } from '@/src/components/Seg';
+import { useSession } from '@/src/features/auth/SessionProvider';
+import { useLeaderboard, useMyGuildIds, useSetGuildMember } from '@/src/features/leaderboard/hooks';
+import { useNow } from '@/src/lib/useNow';
+import { fonts, useTheme } from '@/src/theme';
+import { tierName } from '@/src/types/app';
+
+export default function LeaderboardScreen() {
+  const { colors } = useTheme();
+  const params = useLocalSearchParams<{ skillId?: string; guildId?: string; title?: string; color?: string }>();
+  const { session } = useSession();
+  const meId = session?.user?.id;
+  const nowMs = useNow();
+  const accent = params.color ?? colors.primary;
+  const isGuild = Boolean(params.guildId);
+
+  const [days, setDays] = useState<'7' | '30'>('7');
+  const [who, setWho] = useState<'all' | 'following'>('all');
+  const numDays = days === '7' ? 7 : 30;
+  const { data: rows, isLoading } = useLeaderboard({
+    skillId: params.skillId,
+    guildId: params.guildId,
+    followingOnly: !isGuild && who === 'following',
+    days: numDays,
+  });
+  const { data: myGuilds } = useMyGuildIds();
+  const setMember = useSetGuildMember();
+  const inGuild = Boolean(params.guildId && myGuilds?.includes(params.guildId));
+
+  const list = useMemo(() => rows ?? [], [rows]);
+
+  const dateRange = useMemo(() => {
+    const to = new Date(nowMs);
+    const from = new Date(nowMs - numDays * 24 * 60 * 60 * 1000);
+    return { from, to };
+  }, [nowMs, numDays]);
+
+  const podiumRankings = useMemo(
+    () =>
+      list.slice(0, 3).map((r, idx) => ({
+        userId: r.userId,
+        userName: r.name,
+        rank: r.rank || idx + 1,
+        value: r.minutes,
+        avatarColor: r.color,
+      })),
+    [list],
+  );
+
+  const rankings = useMemo(
+    () =>
+      list.map((r, idx) => ({
+        userId: r.userId,
+        rank: r.rank || idx + 1,
+        userName: r.userId === meId ? `${r.name} (You)` : r.name,
+        byline: `${tierName(r.tier)} · ${r.sessions} sessions${r.nodesLanded > 0 ? ` · ${r.nodesLanded} landed` : ''}`,
+        value: r.minutes,
+        displayed: true,
+        avatarColor: r.color,
+      })),
+    [list, meId],
+  );
+
+  function openUser(userId: string) {
+    if (userId === meId) router.push('/(tabs)/profile');
+    else router.push({ pathname: '/user/[id]', params: { id: userId } });
+  }
+
+  return (
+    <Screen scroll>
+      <View style={styles.header}>
+        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
+      </View>
+      <Text style={[styles.kicker, { color: accent }]}>{isGuild ? 'GUILD LEADERBOARD' : 'SKILL LEADERBOARD'}</Text>
+      <Text style={[styles.title, { color: colors.ink }]}>{params.title ?? 'Leaderboard'}</Text>
+      <Text style={[styles.sub, { color: colors.muted }]}>
+        Ranked by minutes practised. Private sessions never count.
+      </Text>
+
+      {!isGuild ? (
+        <View style={{ marginTop: 14 }}>
+          <Seg
+            options={[
+              { value: 'all', label: 'Everyone' },
+              { value: 'following', label: 'Following' },
+            ]}
+            value={who}
+            onChange={setWho}
+          />
+        </View>
+      ) : null}
+
+      {isGuild ? (
+        <Button
+          title={inGuild ? 'Leave guild' : 'Join guild to rank'}
+          variant={inGuild ? 'ghost' : 'primary'}
+          size="sm"
+          onPress={() => setMember.mutate({ guildId: params.guildId!, join: !inGuild })}
+          loading={setMember.isPending}
+          style={{ marginTop: 12, alignSelf: 'flex-start' }}
+        />
+      ) : null}
+
+      {isLoading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} />
+      ) : list.length === 0 ? (
+        <Card style={{ marginTop: 18, alignItems: 'center', paddingVertical: 28 }}>
+          <Text style={{ fontSize: 34 }}>🏁</Text>
+          <Text style={[styles.emptyTitle, { color: colors.ink }]}>No one on the board yet</Text>
+          <Text style={[styles.sub, { color: colors.muted, textAlign: 'center' }]}>
+            Log a session and you’ll take first place.
+          </Text>
+        </Card>
+      ) : (
+        <View style={{ marginTop: 16 }}>
+          <LeaderboardCard
+            title={params.title ?? 'Leaderboard'}
+            fromDate={dateRange.from}
+            toDate={dateRange.to}
+            currentUserId={meId}
+            runOptions={[
+              { id: '7', label: 'This week' },
+              { id: '30', label: '30 days' },
+            ]}
+            selectedRunId={days}
+            onRunChange={(id) => setDays(id === '30' ? '30' : '7')}
+            podiumRankings={podiumRankings}
+            rankings={rankings}
+            valueSuffix="min"
+            onUserPress={openUser}
+          />
+        </View>
+      )}
+      <View style={{ height: 30 }} />
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  header: { alignItems: 'flex-start' },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 1.2, marginTop: 4 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, marginTop: 2 },
+  sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 4, lineHeight: 19 },
+  emptyTitle: { fontFamily: fonts.display, fontSize: 18, marginTop: 8 },
+});
