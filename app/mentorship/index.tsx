@@ -6,6 +6,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Screen } from '@/src/components/Screen';
+import { NavBar } from '@/src/components/Header';
 import { Seg } from '@/src/components/Seg';
 import { VideoProof } from '@/src/components/VideoProof';
 import { useSignedUrl } from '@/src/features/media/api';
@@ -24,10 +25,9 @@ export default function MentorshipScreen() {
   const shown = all.filter((t) => t.direction === tab);
 
   return (
-    <Screen scroll>
+    <Screen scroll header={<NavBar onBack={() => router.back()} />}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.ink }]}>Mentorship</Text>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>Mentorship</Text>
       </View>
       <Text style={[styles.sub, { color: colors.muted }]}>
         Ask people ahead of you for feedback, or help the ones behind you.
@@ -170,7 +170,7 @@ function ThreadCard({ thread }: { thread: FeedbackThread }) {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 28 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1 },
   sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 4, lineHeight: 19 },
   emptyTitle: { fontFamily: fonts.display, fontSize: 17, marginTop: 8 },
   threadHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },

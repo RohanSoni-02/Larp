@@ -1,12 +1,34 @@
 import type { BottomTabBarProps } from 'expo-router/build/layouts/Tabs';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
 import { Icon } from '@/src/components/Icon';
+import { PressableScale } from '@/src/components/PressableScale';
 import { fonts, useTheme } from '@/src/theme';
+import { springs } from '@/src/theme/motion';
+
+/** The icon dips and springs back when its tab becomes active. */
+function TabIcon({ focused, children }: { focused: boolean; children: ReactNode }) {
+  const scale = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
+
+  const wasFocused = useRef(focused);
+
+  useEffect(() => {
+    const changed = wasFocused.current !== focused;
+    wasFocused.current = focused;
+    if (!changed || !focused || reduceMotion) return;
+    scale.value = withSequence(withTiming(0.86, { duration: 70 }), withSpring(1, springs.reward));
+  }, [focused, reduceMotion, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+}
 
 /** Docked tab bar with the purple Start button in the middle. */
 export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: BottomTabBarProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <View
@@ -28,41 +50,39 @@ export function TabBar({ state, descriptors, emitter, navigateToTab, insets }: B
         if (route.name === 'start') {
           return (
             <View key={route.key} style={styles.item}>
-              <Pressable
+              <PressableScale
                 onPress={onPress}
+                scale={0.92}
                 accessibilityRole="button"
                 accessibilityLabel="Start a practice session"
                 hitSlop={6}
-                style={({ pressed }) => [
+                style={[
                   styles.start,
-                  { backgroundColor: colors.accent, transform: [{ scale: pressed ? 0.94 : 1 }] },
+                  { backgroundColor: colors.accent },
+                  !isDark && [styles.startLift, { shadowColor: colors.accent }],
                 ]}
               >
-                <Icon name="play" size={18} color={colors.accentInk} />
-              </Pressable>
+                <Icon name="play" size={19} color={colors.accentInk} />
+              </PressableScale>
             </View>
           );
         }
 
+        const tint = focused ? colors.ink : colors.subtle;
         return (
-          <Pressable
+          <PressableScale
             key={route.key}
             onPress={onPress}
+            scale={0.94}
+            pressedOpacity={0.6}
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
             accessibilityLabel={label}
-            style={({ pressed }) => [styles.item, { opacity: pressed ? 0.6 : 1 }]}
+            style={styles.item}
           >
-            {options.tabBarIcon?.({ focused, color: focused ? colors.ink : colors.subtle, size: 24 })}
-            <Text
-              style={[
-                styles.label,
-                { color: focused ? colors.ink : colors.subtle, fontFamily: focused ? fonts.bodyBold : fonts.bodyMedium },
-              ]}
-            >
-              {label}
-            </Text>
-          </Pressable>
+            <TabIcon focused={focused}>{options.tabBarIcon?.({ focused, color: tint, size: 24 })}</TabIcon>
+            <Text style={[styles.label, { color: tint, fontFamily: focused ? fonts.bodyBold : fonts.bodyMedium }]}>{label}</Text>
+          </PressableScale>
         );
       })}
     </View>
@@ -78,6 +98,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, minHeight: 48 },
-  start: { width: 52, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  start: { width: 54, height: 42, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  startLift: { shadowOpacity: 0.32, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4 },
   label: { fontSize: 10.5, letterSpacing: -0.05 },
 });

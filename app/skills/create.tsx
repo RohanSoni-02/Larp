@@ -4,6 +4,7 @@ import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 
 import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
+import { NavBar } from '@/src/components/Header';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { addSkillToPortfolio } from '@/src/features/skills/api';
 import { findNearDuplicate, SWATCHES, TREE_TEMPLATE } from '@/src/features/skills/catalog';
@@ -57,10 +58,9 @@ export default function CreateSkillScreen() {
   const inputStyle = [styles.input, { backgroundColor: colors.surface2, borderColor: colors.surface2, color: colors.ink }] as const;
 
   return (
-    <Screen scroll>
+    <Screen scroll header={<NavBar onClose={() => router.back()} />}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.ink }]}>Create a skill</Text>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>Create a skill</Text>
       </View>
 
       <Text style={[styles.label, { color: colors.muted }]}>Name</Text>
@@ -133,7 +133,7 @@ export default function CreateSkillScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 28 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1 },
   label: { fontFamily: fonts.bodyBold, fontSize: 14, letterSpacing: -0.15, marginTop: 16, marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11, fontFamily: fonts.body, fontSize: 15 },
   duplicate: { fontFamily: fonts.body, fontSize: 13, marginTop: 6, lineHeight: 18 },

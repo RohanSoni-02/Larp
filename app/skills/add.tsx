@@ -7,6 +7,7 @@ import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Icon } from '@/src/components/Icon';
 import { Screen } from '@/src/components/Screen';
+import { NavBar } from '@/src/components/Header';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { addSkillToPortfolio } from '@/src/features/skills/api';
 import { CATEGORIES, createCustomSkill, SWATCHES, TREE_TEMPLATE } from '@/src/features/skills/catalog';
@@ -78,10 +79,9 @@ export default function AddSkillScreen() {
   );
 
   return (
-    <Screen scroll>
+    <Screen scroll header={<NavBar onClose={() => router.back()} />}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.ink }]}>Add a skill</Text>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
+        <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>Add a skill</Text>
       </View>
       <Text style={[styles.subtitle, { color: colors.muted }]}>
         Pick one — it starts with a simple community tree you can make your own later. Or create your own from scratch.
@@ -153,7 +153,7 @@ export default function AddSkillScreen() {
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 28 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1 },
   subtitle: { fontFamily: fonts.body, fontSize: 14, marginTop: 6, lineHeight: 20 },
   sphereCard: { marginTop: 14, alignItems: 'center', overflow: 'hidden' },
   sphereHeader: {

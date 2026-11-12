@@ -1,6 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Icon, type AppIconName } from '@/src/components/Icon';
+import { PressableScale } from '@/src/components/PressableScale';
 import { fonts, useTheme } from '@/src/theme';
 
 export type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -29,36 +30,36 @@ export function Button({
   style,
   accessibilityLabel,
 }: ButtonProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const isDisabled = disabled || loading;
 
   const palette: Record<ButtonVariant, { bg: string; fg: string; border: string }> = {
     primary: { bg: colors.primary, fg: colors.primaryInk, border: colors.primary },
     accent: { bg: colors.accent, fg: colors.accentInk, border: colors.accent },
     secondary: { bg: colors.fill, fg: colors.ink, border: 'transparent' },
-    outline: { bg: 'transparent', fg: colors.ink, border: colors.line },
+    outline: { bg: 'transparent', fg: colors.ink, border: colors.surface3 },
     ghost: { bg: 'transparent', fg: colors.ink, border: 'transparent' },
     danger: { bg: 'transparent', fg: colors.bad, border: 'transparent' },
   };
   const { bg, fg, border } = palette[variant];
+  const filled = variant === 'primary' || variant === 'accent';
   const sizeStyle = size === 'sm' ? styles.sm : size === 'lg' ? styles.lg : styles.md;
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={isDisabled}
+      scale={size === 'sm' ? 0.95 : 0.975}
+      pressedOpacity={filled ? 0.92 : 0.7}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      style={({ pressed }) => [
+      style={[
         styles.base,
         sizeStyle,
-        {
-          backgroundColor: bg,
-          borderColor: border,
-          opacity: isDisabled ? 0.4 : pressed ? 0.88 : 1,
-          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
-        },
+        { backgroundColor: bg, borderColor: border },
+        // The main action lifts off the page on a shadow of its own colour.
+        filled && size !== 'sm' && !isDisabled && !isDark && [styles.lift, { shadowColor: bg }],
         style,
       ]}
     >
@@ -75,7 +76,7 @@ export function Button({
           </Text>
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
   },
+  lift: { shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 3 },
   lg: { height: 56, paddingHorizontal: 22 },
   md: { height: 50, paddingHorizontal: 20 },
   sm: { height: 34, paddingHorizontal: 14, width: 'auto' },

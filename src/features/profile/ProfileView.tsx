@@ -254,6 +254,9 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
 
   if (!profile) return null;
   const p = profile as Profile;
+  // Past ten hours the minutes are noise, and they no longer fit the column.
+  const totalMinutes = stats?.totalMinutes ?? 0;
+  const practised = totalMinutes >= 600 ? `${Math.round(totalMinutes / 60).toLocaleString()} h` : formatDuration(totalMinutes * 60);
 
   return (
     <View>
@@ -290,7 +293,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
             <View style={[styles.statDivider, { backgroundColor: colors.line }]} />
             <Stat value={`${counts?.following ?? 0}`} label="Following" />
             <View style={[styles.statDivider, { backgroundColor: colors.line }]} />
-            <Stat value={formatDuration((stats?.totalMinutes ?? 0) * 60)} label="Practised" />
+            <Stat value={practised} label="Practised" />
           </View>
         </View>
 

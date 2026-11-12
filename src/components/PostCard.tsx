@@ -6,6 +6,7 @@ import { Art } from '@/src/components/Art';
 import { Avatar } from '@/src/components/Avatar';
 import { Icon } from '@/src/components/Icon';
 import { IconButton } from '@/src/components/IconButton';
+import { PressableScale } from '@/src/components/PressableScale';
 import { TierPill } from '@/src/components/TierPill';
 import { VideoProof } from '@/src/components/VideoProof';
 import { useSignedUrl } from '@/src/features/media/api';
@@ -147,7 +148,7 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
     .join(' · ');
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.bg, borderBottomColor: colors.surface2 }]}>
+    <View style={[styles.card, { backgroundColor: colors.bg, borderBottomColor: colors.line }]}>
       {/* header */}
       <View style={styles.head}>
         <Pressable onPress={openProfile} accessibilityLabel={`${post.authorName}’s profile`}>
@@ -214,26 +215,21 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
           const count = post.kudoCounts[label] ?? 0;
           const on = post.myKudos.includes(label);
           return (
-            <Pressable
+            <PressableScale
               key={label}
               onPress={() => toggleKudo.mutate({ post, label, on })}
+              scale={0.93}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
               accessibilityLabel={`${label}, ${count} given`}
-              style={({ pressed }) => [
-                styles.kudo,
-                {
-                  backgroundColor: on ? colors.accentSoft : colors.fill,
-                  transform: [{ scale: pressed ? 0.96 : 1 }],
-                },
-              ]}
+              style={[styles.kudo, { backgroundColor: on ? colors.accentSoft : colors.fill }]}
             >
               {on ? <Icon name="clap" filled size={13} color={colors.accentStrong} /> : null}
               <Text style={[styles.kudoText, { color: on ? colors.accentStrong : colors.ink }]}>{label}</Text>
               {count > 0 ? (
                 <Text style={[styles.kudoCount, { color: on ? colors.accentStrong : colors.muted }]}>{count}</Text>
               ) : null}
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>
@@ -242,7 +238,7 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
         <Pressable
           onPress={() => router.push({ pathname: '/mentorship/ask', params: { skillId: post.skillId, sessionId: post.id } })}
           accessibilityLabel="Ask a mentor for feedback on this session"
-          style={({ pressed }) => [styles.mentorLink, { borderColor: colors.line }, pressed && { opacity: 0.6 }]}
+          style={({ pressed }) => [styles.mentorLink, { backgroundColor: colors.surface2 }, pressed && { opacity: 0.6 }]}
         >
           <Icon name="mentor" size={17} color={colors.ink} />
           <Text style={[styles.mentorText, { color: colors.ink }]}>Ask a mentor for feedback</Text>
@@ -272,7 +268,7 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
 }
 
 const styles = StyleSheet.create({
-  card: { borderBottomWidth: 8 },
+  card: { borderBottomWidth: StyleSheet.hairlineWidth, paddingBottom: 4 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 16 },
   headText: { flex: 1, minWidth: 0, gap: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -281,13 +277,13 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, paddingHorizontal: 9, height: 24 },
   badgeText: { fontFamily: fonts.bodyBold, fontSize: 11.5 },
   body: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14 },
-  caption: { fontFamily: fonts.display, fontSize: 19, lineHeight: 24, letterSpacing: -0.45, marginBottom: 14 },
+  caption: { fontFamily: fonts.display, fontSize: 18, lineHeight: 23, letterSpacing: -0.4, marginBottom: 14 },
   stats: { flexDirection: 'row', alignItems: 'stretch', gap: 18 },
   stat: { flexShrink: 1, minWidth: 0 },
-  statLabel: { fontFamily: fonts.bodyMedium, fontSize: 12, marginBottom: 2 },
+  statLabel: { fontFamily: fonts.bodyMedium, fontSize: 11.5, marginBottom: 1 },
   statValueRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statDot: { width: 8, height: 8, borderRadius: 4 },
-  statValue: { fontFamily: fonts.numHeavy, fontSize: 26, lineHeight: 29, fontVariant: ['tabular-nums'] },
+  statValue: { fontFamily: fonts.num, fontSize: 22, lineHeight: 25, fontVariant: ['tabular-nums'] },
   statDivider: { width: StyleSheet.hairlineWidth },
   tag: {
     flexDirection: 'row',
@@ -300,7 +296,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12 },
-  mediaWrap: { overflow: 'hidden' },
+  mediaWrap: { overflow: 'hidden', marginHorizontal: 16, borderRadius: 20 },
   media: { position: 'relative', overflow: 'hidden', width: '100%' },
   mediaImg: { width: '100%', height: '100%' },
   inset: {
@@ -335,7 +331,7 @@ const styles = StyleSheet.create({
     gap: 5,
     borderRadius: 999,
     paddingHorizontal: 12,
-    height: 32,
+    height: 34,
   },
   kudoText: { fontFamily: fonts.bodyBold, fontSize: 12.5, letterSpacing: -0.1 },
   kudoCount: { fontFamily: fonts.num, fontSize: 15, fontVariant: ['tabular-nums'] },
@@ -346,15 +342,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 10,
     paddingHorizontal: 12,
-    height: 42,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
+    height: 44,
+    borderRadius: 14,
   },
   mentorText: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 13.5 },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
     paddingLeft: 16,
     paddingRight: 6,
     height: 48,

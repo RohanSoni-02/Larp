@@ -7,6 +7,7 @@ import { Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextIn
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
+import { NavAction, NavBar } from '@/src/components/Header';
 import { Icon } from '@/src/components/Icon';
 import { Screen } from '@/src/components/Screen';
 import { ProgressBar } from '@/src/components/ProgressBar';
@@ -18,7 +19,7 @@ import { useMyPortfolio, useSkillTree } from '@/src/features/trees/hooks';
 import { useUsableSkills } from '@/src/features/skills/hooks';
 import { formatClock } from '@/src/lib/format';
 import { elapsedSec, useSessionStore } from '@/src/stores/session';
-import { fonts, useTheme } from '@/src/theme';
+import { fonts, GUTTER, useTheme } from '@/src/theme';
 
 const MAX_CLIP_MS = 30_000;
 
@@ -143,19 +144,35 @@ export default function NewSessionScreen() {
   };
 
   return (
-    <Screen scroll>
-      <View style={styles.closeRow}>
-        <Button
-          title={active ? 'Discard' : 'Close'}
-          variant="ghost"
-          size="sm"
-          onPress={() => {
-            if (active) store.discard();
-            router.back();
-          }}
-          accessibilityLabel="Close session screen"
+    <Screen
+      scroll
+      header={
+        <NavBar
+          onClose={active ? undefined : () => router.back()}
+          right={
+            active ? (
+              <NavAction
+                label="Discard"
+                tone="bad"
+                onPress={() => {
+                  store.discard();
+                  router.back();
+                }}
+              />
+            ) : null
+          }
         />
-      </View>
+      }
+      footer={
+        <Button
+          title={saving ? 'Saving…' : 'Save session'}
+          size="lg"
+          onPress={save}
+          disabled={!active || saving}
+          loading={saving}
+        />
+      }
+    >
 
       <Text style={[styles.title, { color: colors.ink }]}>Log a session</Text>
       {active?.label ? <Text style={[styles.label, { color: colors.muted }]}>{active.label}</Text> : null}
@@ -180,7 +197,7 @@ export default function NewSessionScreen() {
       <View style={styles.planHead}>
         <Text style={[styles.sectionLabel, { color: colors.muted, marginTop: 0 }]}>Session plan</Text>
         <Pressable onPress={() => router.push('/session/template')} hitSlop={8} accessibilityRole="button">
-          <Text style={[styles.link, { color: colors.primary }]}>+ New template</Text>
+          <Text style={[styles.link, { color: colors.accentStrong }]}>New template</Text>
         </Pressable>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chips} contentContainerStyle={{ gap: 8 }}>
@@ -198,11 +215,11 @@ export default function NewSessionScreen() {
       {/* Timer */}
       <Card style={styles.timerCard}>
         {position ? (
-          <Text style={[styles.blockNow, { color: colors.primary }]}>
-            {position.done ? `${plan!.name} complete ✓` : `${position.block.label} · ${formatClock(position.remainingSec)} left`}
+          <Text style={[styles.blockNow, { color: colors.accentStrong }]}>
+            {position.done ? `${plan!.name} complete` : `${position.block.label} · ${formatClock(position.remainingSec)} left`}
           </Text>
         ) : null}
-        <Text style={[styles.clock, { color: running ? colors.ink : colors.muted }]}>{formatClock(elapsed)}</Text>
+        <Text style={[styles.clock, { color: running || elapsed === 0 ? colors.ink : colors.muted }]}>{formatClock(elapsed)}</Text>
         <Text style={[styles.clockHint, { color: colors.muted }]}>
           {running ? 'Practising…' : elapsed > 0 ? 'Paused' : 'Ready when you are'}
         </Text>
@@ -223,26 +240,35 @@ export default function NewSessionScreen() {
         ) : null}
         <View style={styles.timerButtons}>
           {active ? (
-            <Button title={running ? 'Pause' : 'Resume'} onPress={store.toggle} style={{ minWidth: 140 }} />
+            <Button
+              title={running ? 'Pause' : 'Resume'}
+              icon={running ? 'pause' : 'play'}
+              variant={running ? 'secondary' : 'primary'}
+              onPress={store.toggle}
+              style={styles.timerMain}
+            />
           ) : (
             <Button
               title="Start"
+              icon="play"
               onPress={() => skillId && store.begin({ skillId, plan: pendingPlan })}
               disabled={!skillId}
-              style={{ minWidth: 140 }}
+              style={styles.timerMain}
             />
           )}
-          <Button title="+10 min (demo)" variant="ghost" size="sm" onPress={store.addTenMinutes} disabled={!active} />
         </View>
         {active ? (
-          <Button
-            title="🎧 Focus mode"
-            variant="secondary"
-            size="sm"
-            onPress={() => router.push('/session/focus')}
-            style={{ marginTop: 10 }}
-            accessibilityLabel="Open full-screen focus mode"
-          />
+          <View style={styles.timerExtras}>
+            <Button
+              title="Focus mode"
+              icon="headphones"
+              variant="secondary"
+              size="sm"
+              onPress={() => router.push('/session/focus')}
+              accessibilityLabel="Open full-screen focus mode"
+            />
+            <Button title="+10 min (demo)" variant="ghost" size="sm" onPress={store.addTenMinutes} />
+          </View>
         ) : null}
       </Card>
 
@@ -263,12 +289,12 @@ export default function NewSessionScreen() {
           </ScrollView>
           {selectedNode ? (
             <Pressable
-              style={[styles.landedRow, { borderColor: colors.line, backgroundColor: colors.surface }]}
+              style={[styles.landedRow, { backgroundColor: active?.landed ? colors.goldSoft : colors.surface2 }]}
               onPress={() => store.setLanded(!active?.landed)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: Boolean(active?.landed) }}
             >
-              <View style={[styles.checkbox, { borderColor: colors.line }, active?.landed && { backgroundColor: colors.gold, borderColor: colors.gold }]}>
+              <View style={[styles.checkbox, { borderColor: colors.subtle }, active?.landed && { backgroundColor: colors.gold, borderColor: colors.gold }]}>
                 {active?.landed ? <Icon name="check" size={14} color="#1B1505" /> : null}
               </View>
               <View style={{ flex: 1 }}>
@@ -288,15 +314,16 @@ export default function NewSessionScreen() {
         value={active?.note ?? ''}
         onChangeText={store.setNote}
         placeholder='How did it go? "struggled with bar 12"'
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={colors.subtle}
+        selectionColor={colors.accent}
         multiline
         accessibilityLabel="Session note"
         style={[styles.note, { backgroundColor: colors.surface2, borderColor: colors.surface2, color: colors.ink }]}
       />
       <View style={styles.mediaRow}>
-        <Button title={active?.localMedia ? 'Change proof' : 'Photo / clip'} variant="secondary" size="sm" onPress={pickPhoto} disabled={!active} />
+        <Button title={active?.localMedia ? 'Change proof' : 'Photo or clip'} icon="photo" variant="secondary" size="sm" onPress={pickPhoto} disabled={!active} />
         {Platform.OS !== 'web' ? (
-          <Button title="🎥 Record ≤30s" variant="secondary" size="sm" onPress={recordClip} disabled={!active} />
+          <Button title="Record up to 30s" icon="video" variant="secondary" size="sm" onPress={recordClip} disabled={!active} />
         ) : null}
         {active?.localMedia ? (
           <View style={styles.mediaPreviewWrap}>
@@ -314,32 +341,31 @@ export default function NewSessionScreen() {
         ) : null}
       </View>
 
-      <Button title={saving ? 'Saving…' : 'Save session'} onPress={save} disabled={!active || saving} loading={saving} style={{ marginTop: 18 }} />
-      <View style={{ height: 30 }} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  closeRow: { alignItems: 'flex-start', marginBottom: 4 },
   title: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 38, letterSpacing: -1.1 },
   label: { fontFamily: fonts.body, fontSize: 14, marginTop: 4 },
-  chips: { marginTop: 14, marginHorizontal: -18, paddingHorizontal: 18 },
-  timerCard: { marginTop: 16, alignItems: 'center', paddingVertical: 26 },
+  chips: { marginTop: 12, marginHorizontal: -GUTTER, paddingHorizontal: GUTTER, flexGrow: 0 },
+  timerCard: { marginTop: 18, alignItems: 'center', paddingVertical: 28, borderRadius: 28 },
   planHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 },
   link: { fontFamily: fonts.bodyBold, fontSize: 13.5 },
   blockNow: { fontFamily: fonts.bodyBold, fontSize: 14, marginBottom: 4 },
   blocks: { flexDirection: 'row', gap: 6, alignSelf: 'stretch', marginTop: 16 },
   blockLabel: { fontFamily: fonts.body, fontSize: 11.5, marginTop: 4, textAlign: 'center' },
-  clock: { fontFamily: fonts.numHeavy, fontSize: 96, fontVariant: ['tabular-nums'], lineHeight: 98, letterSpacing: -1 },
+  clock: { fontFamily: fonts.numHeavy, fontSize: 104, fontVariant: ['tabular-nums'], lineHeight: 104, letterSpacing: -1 },
   clockHint: { fontFamily: fonts.body, fontSize: 14, marginTop: 4 },
-  timerButtons: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18 },
+  timerButtons: { alignSelf: 'stretch', alignItems: 'center', marginTop: 20 },
+  timerMain: { width: 200 },
+  timerExtras: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
   sectionLabel: { fontFamily: fonts.bodyBold, fontSize: 14, marginTop: 22, letterSpacing: -0.15 },
-  landedRow: { flexDirection: 'row', gap: 12, alignItems: 'center', borderWidth: 1, borderRadius: 14, padding: 12, marginTop: 12 },
+  landedRow: { flexDirection: 'row', gap: 12, alignItems: 'center', borderRadius: 16, padding: 14, marginTop: 12 },
   checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   landedTitle: { fontFamily: fonts.bodyBold, fontSize: 15 },
   landedSub: { fontFamily: fonts.body, fontSize: 13, marginTop: 2, lineHeight: 18 },
-  note: { borderWidth: 1, borderRadius: 14, padding: 12, minHeight: 74, marginTop: 18, fontFamily: fonts.body, fontSize: 15, textAlignVertical: 'top' },
+  note: { borderWidth: 1, borderRadius: 16, padding: 14, minHeight: 84, marginTop: 20, fontFamily: fonts.body, fontSize: 15, textAlignVertical: 'top' },
   mediaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 12 },
   mediaPreviewWrap: { position: 'relative' },
   mediaPreview: { width: 56, height: 56, borderRadius: 10 },
