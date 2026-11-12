@@ -1,11 +1,14 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
+import { EmptyState } from '@/src/components/EmptyState';
+import { Icon } from '@/src/components/Icon';
+import { Skeleton } from '@/src/components/Skeleton';
 import { Screen } from '@/src/components/Screen';
 import { TierPill } from '@/src/components/TierPill';
 import { useSession } from '@/src/features/auth/SessionProvider';
@@ -64,13 +67,24 @@ export default function InviteScreen() {
   return (
     <Screen scroll contentStyle={{ paddingTop: 30 }}>
       {!invite ? (
-        <Text style={[styles.title, { color: colors.ink }]}>This invite link is incomplete.</Text>
+        <EmptyState
+          icon="ticket"
+          title="This invite link is incomplete"
+          body="Ask your friend to send it again."
+          action={<Button title="Back to Larping" variant="secondary" size="sm" onPress={() => router.replace('/')} />}
+        />
       ) : isLoading ? (
-        <ActivityIndicator style={{ marginTop: 60 }} />
+        <View style={{ gap: 14, marginTop: 30 }} accessibilityLabel="Loading invite">
+          <Skeleton height={230} radius={28} />
+          <Skeleton height={56} radius={28} />
+        </View>
       ) : (
         <>
-          <Text style={[styles.kicker, { color: accent }]}>YOU’RE INVITED</Text>
-          <Card variant="raised" style={[styles.hero, { borderColor: accent }]}>
+          <View style={styles.kickerRow}>
+            <Icon name="ticket" size={14} color={colors.accentStrong} />
+            <Text style={[styles.kicker, { color: colors.accentStrong }]}>YOU’RE INVITED</Text>
+          </View>
+          <Card variant="raised" style={styles.hero}>
             {preview?.inviter ? (
               <>
                 <Avatar name={preview.inviter.name} color={preview.inviter.color} size={72} />
@@ -81,7 +95,13 @@ export default function InviteScreen() {
                 </Text>
               </>
             ) : (
-              <Text style={[styles.meta, { color: colors.muted }]}>A friend invited you to Larping.</Text>
+              <>
+                <View style={[styles.friend, { backgroundColor: colors.accentSoft }]}>
+                  <Icon name="people" size={28} color={colors.accentStrong} />
+                </View>
+                <Text style={[styles.name, { color: colors.ink }]}>A friend invited you</Text>
+                <Text style={[styles.meta, { color: colors.muted }]}>Come practise on Larping.</Text>
+              </>
             )}
             {preview?.skill ? (
               <View style={[styles.skill, { backgroundColor: `${accent}1F` }]}>
@@ -112,6 +132,7 @@ export default function InviteScreen() {
             {!session ? (
               <>
                 <Button
+                  size="lg"
                   title="Join Larping"
                   onPress={() => {
                     prefillOnboarding();
@@ -129,6 +150,7 @@ export default function InviteScreen() {
               </>
             ) : !onboarded ? (
               <Button
+                size="lg"
                 title="Continue setup"
                 onPress={() => {
                   prefillOnboarding();
@@ -138,14 +160,15 @@ export default function InviteScreen() {
             ) : isSelf ? (
               <>
                 <Text style={[styles.meta, { color: colors.muted, textAlign: 'center' }]}>
-                  This is your own invite — share it with a friend.
+                  This is your own invite. Share it with a friend.
                 </Text>
                 <Button title="Back to Larping" variant="secondary" onPress={() => router.replace('/')} />
               </>
             ) : (
               <>
                 <Button
-                  title={preview?.skill ? `Accept & start ${preview.skill.name}` : 'Accept invite'}
+                  size="lg"
+                  title={preview?.skill ? `Accept and start ${preview.skill.name}` : 'Accept invite'}
                   onPress={() => accept.mutate()}
                   loading={accept.isPending}
                 />
@@ -167,14 +190,15 @@ export default function InviteScreen() {
 }
 
 const styles = StyleSheet.create({
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 12.5, letterSpacing: 1.4, textAlign: 'center' },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 26, textAlign: 'center', marginTop: 40 },
-  hero: { alignItems: 'center', marginTop: 14, paddingVertical: 24, borderWidth: 2 },
-  name: { fontFamily: fonts.displayHeavy, fontSize: 24, marginTop: 10 },
+  kickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 12.5, letterSpacing: 1.4 },
+  hero: { alignItems: 'center', marginTop: 16, paddingVertical: 28, borderRadius: 28 },
+  friend: { width: 72, height: 72, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  name: { fontFamily: fonts.displayHeavy, fontSize: 25, letterSpacing: -0.8, marginTop: 12 },
   meta: { fontFamily: fonts.body, fontSize: 14, marginTop: 2 },
   skill: { alignSelf: 'stretch', borderRadius: 16, padding: 14, marginTop: 18, marginHorizontal: 4 },
   skillLabel: { fontFamily: fonts.bodyBold, fontSize: 14, letterSpacing: -0.15 },
-  skillName: { fontFamily: fonts.display, fontSize: 22, marginTop: 2 },
+  skillName: { fontFamily: fonts.display, fontSize: 22, letterSpacing: -0.5, marginTop: 2 },
   blurb: { fontFamily: fonts.body, fontSize: 13.5, marginTop: 8, lineHeight: 19 },
-  pitch: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, marginTop: 18, textAlign: 'center' },
+  pitch: { fontFamily: fonts.body, fontSize: 15, lineHeight: 22, marginTop: 20, textAlign: 'center', paddingHorizontal: 8 },
 });

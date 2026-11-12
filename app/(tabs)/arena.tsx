@@ -12,6 +12,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { TopBar } from '@/src/components/Header';
 import { Icon, type AppIconName } from '@/src/components/Icon';
 import { LiveDot } from '@/src/components/LiveDot';
+import { PressableScale } from '@/src/components/PressableScale';
 import { ProgressBar } from '@/src/components/ProgressBar';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
@@ -50,7 +51,7 @@ const VIEWS: { value: ArenaView; label: string }[] = [
 /* ─── Small building blocks ─── */
 
 function ProgressRing({ pct, label, size = 44 }: { pct: number; label: string; size?: number }) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const stroke = 4;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -163,7 +164,8 @@ function RoomRailCard({ room, skillName }: { room: CoopRoom; skillName: string }
       </Text>
       <View style={[styles.rowBetween, { marginTop: 16 }]}>
         <AvatarStack people={room.members} size={26} ring={bg} />
-        <Pressable
+        <PressableScale
+          scale={0.94}
           onPress={() =>
             joined
               ? router.push({ pathname: '/session/new', params: { skillId: room.skillId, roomId: room.id, label: `Co-op: ${room.title}` } })
@@ -171,10 +173,11 @@ function RoomRailCard({ room, skillName }: { room: CoopRoom; skillName: string }
           }
           accessibilityRole="button"
           accessibilityLabel={joined ? 'Log session' : 'Join quietly'}
-          style={({ pressed }) => [styles.railBtn, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
+          style={[styles.railBtn, { backgroundColor: joined ? colors.nightInk : colors.accent }]}
         >
-          <Text style={[styles.railBtnText, { color: colors.accentInk }]}>{joined ? 'Log session' : 'Join quietly'}</Text>
-        </Pressable>
+          {joined ? <Icon name="play" size={12} color={colors.night} /> : null}
+          <Text style={[styles.railBtnText, { color: joined ? colors.night : colors.accentInk }]}>{joined ? 'Log session' : 'Join quietly'}</Text>
+        </PressableScale>
       </View>
     </View>
   );
@@ -341,7 +344,7 @@ function StandardRow({ standard, skillName, onOpen }: { standard: Standard; skil
   const { colors } = useTheme();
   const best = standard.attempts[0];
   return (
-    <Pressable style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.6 }]} onPress={onOpen} accessibilityRole="button">
+    <PressableScale scale={0.98} pressedOpacity={0.6} style={styles.listRow} onPress={onOpen} accessibilityRole="button">
       <IconTile name="medal" />
       <View style={styles.flex}>
         <Text style={[styles.rowTitle, { color: colors.ink }]} numberOfLines={1}>
@@ -353,7 +356,7 @@ function StandardRow({ standard, skillName, onOpen }: { standard: Standard; skil
         </Text>
       </View>
       <Icon name="chevron-right" size={14} color={colors.subtle} weight="semibold" />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -535,6 +538,9 @@ export default function ArenaScreen() {
   const visibleGuilds = (guilds ?? []).filter((g) => !skillFilter || g.skillId === skillFilter);
 
   const me = leaderboard.find((e) => e.userId === meId);
+  // Who is directly ahead, and by how much: a rank is more useful with a target attached.
+  const ahead = me ? leaderboard.filter((e) => e.minutes > me.minutes).sort((a, b) => a.minutes - b.minutes)[0] : undefined;
+  const chase = me && ahead ? { gap: ahead.minutes - me.minutes + 1, name: ahead.displayName.split(' ')[0] ?? ahead.displayName } : null;
   const periodLabel = leaderboardDays === 7 ? 'This week' : `Last ${leaderboardDays} days`;
   const featuredQuests = [...visibleQuests].sort((a, b) => Number(b.joined) - Number(a.joined)).slice(0, 3);
   const upcoming = visibleGuilds
@@ -547,24 +553,20 @@ export default function ArenaScreen() {
   const openUser = (uid: string) => router.push({ pathname: '/user/[id]', params: { id: uid } });
 
   const filterButton = (
-    <Pressable
+    <PressableScale
+      scale={0.95}
+      pressedOpacity={0.8}
       onPress={() => setFilterOpen(true)}
       accessibilityRole="button"
       accessibilityLabel={`Filter by skill, ${skillFilter ? skillName(skillFilter) : 'all skills'}`}
-      style={({ pressed }) => [
-        styles.filterPill,
-        {
-          backgroundColor: skillFilter ? colors.ink : colors.fill,
-          opacity: pressed ? 0.7 : 1,
-        },
-      ]}
+      style={[styles.filterPill, { backgroundColor: skillFilter ? colors.ink : colors.fill }]}
     >
       {skillFilter ? <View style={[styles.dot, { backgroundColor: skillColor(skillFilter) }]} /> : null}
       <Text style={[styles.filterPillText, { color: skillFilter ? colors.bg : colors.ink }]} numberOfLines={1}>
         {skillFilter ? skillName(skillFilter) : 'All skills'}
       </Text>
       <Icon name="chevron-down" size={12} color={skillFilter ? colors.bg : colors.ink} weight="semibold" />
-    </Pressable>
+    </PressableScale>
   );
 
   const followToggle = (
@@ -596,15 +598,14 @@ export default function ArenaScreen() {
           ) : (
             <>
               {me ? (
-                <Pressable
+                <PressableScale
+                  scale={0.985}
                   onPress={() => setView('rankings')}
                   accessibilityRole="button"
-                  accessibilityLabel={`Your rank ${me.rank}, ${me.minutes} minutes`}
-                  style={({ pressed }) => [
-                    styles.weekCard,
-                    { backgroundColor: colors.night, opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] },
-                  ]}
+                  accessibilityLabel={`Your rank ${me.rank}, ${me.minutes} minutes${chase ? `. ${chase.gap} minutes behind ${chase.name}` : ''}`}
+                  style={[styles.weekCard, { backgroundColor: colors.night }]}
                 >
+                 <View style={styles.weekTop}>
                   <View style={styles.weekRankCol}>
                     <Text style={[styles.weekLabel, { color: colors.nightMuted }]}>{periodLabel}</Text>
                     <View style={styles.weekRankRow}>
@@ -624,7 +625,20 @@ export default function ArenaScreen() {
                     ))}
                   </View>
                   <Icon name="chevron-right" size={14} color={colors.nightMuted} weight="semibold" />
-                </Pressable>
+                 </View>
+                  <View style={[styles.weekChase, { backgroundColor: colors.nightLine }]}>
+                    <Icon name={chase ? 'trending' : 'medal'} size={15} color={colors.nightInk} />
+                    <Text style={[styles.weekChaseText, { color: colors.nightInk }]} numberOfLines={1}>
+                      {chase ? (
+                        <>
+                          <Text style={{ fontFamily: fonts.bodyBold }}>{chase.gap} min</Text> to pass {chase.name}
+                        </>
+                      ) : (
+                        'You’re leading. Keep it that way.'
+                      )}
+                    </Text>
+                  </View>
+                </PressableScale>
               ) : null}
 
               {visibleRooms.length > 0 ? (
@@ -807,7 +821,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 },
   flex: { flex: 1, minWidth: 0 },
   section: { marginTop: 30, gap: 12 },
-  group: { borderRadius: 18, paddingHorizontal: 14, paddingVertical: 6 },
+  group: { borderRadius: 22, paddingHorizontal: 14, paddingVertical: 6 },
   list: { gap: 12 },
   intro: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   introText: { flex: 1, fontFamily: fonts.body, fontSize: 14.5, lineHeight: 20 },
@@ -823,7 +837,7 @@ const styles = StyleSheet.create({
   ringLabel: { fontFamily: fonts.num, fontSize: 14, fontVariant: ['tabular-nums'] },
   stack: { flexDirection: 'row', paddingLeft: 6 },
   stackItem: { marginLeft: -6, borderWidth: 2 },
-  iconTile: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  iconTile: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 9 },
   rowTitle: { fontFamily: fonts.bodyBold, fontSize: 15, letterSpacing: -0.2 },
   rowSub: { fontFamily: fonts.body, fontSize: 13, marginTop: 2 },
@@ -834,7 +848,7 @@ const styles = StyleSheet.create({
   attempt: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 12 },
   roomTimer: { fontFamily: fonts.num, fontSize: 16, fontVariant: ['tabular-nums'] },
   guildHead: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
-  dateBadge: { width: 48, height: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dateBadge: { width: 48, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   dateBadgeMonth: { fontFamily: fonts.bodyBold, fontSize: 10.5, letterSpacing: 0.4 },
   dateBadgeDay: { fontFamily: fonts.numHeavy, fontSize: 24, lineHeight: 26 },
   guildLinks: {
@@ -845,7 +859,10 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   guildLink: { fontFamily: fonts.bodyBold, fontSize: 13.5 },
-  weekCard: { flexDirection: 'row', alignItems: 'center', gap: 18, borderRadius: 20, paddingVertical: 18, paddingLeft: 20, paddingRight: 16 },
+  weekCard: { borderRadius: 26, padding: 8, gap: 4 },
+  weekTop: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingVertical: 10, paddingLeft: 12, paddingRight: 8 },
+  weekChase: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 18, paddingHorizontal: 14, height: 42 },
+  weekChaseText: { flex: 1, fontFamily: fonts.body, fontSize: 14, letterSpacing: -0.1 },
   weekRankCol: { minWidth: 96 },
   weekLabel: { fontFamily: fonts.bodyBold, fontSize: 13 },
   weekRankRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 2 },
@@ -856,7 +873,7 @@ const styles = StyleSheet.create({
   weekStatLabel: { fontFamily: fonts.body, fontSize: 12.5, marginTop: 1 },
   rail: { marginHorizontal: -16 },
   railContent: { gap: 10, paddingHorizontal: 16 },
-  railCard: { width: 272, borderRadius: 20, padding: 18, gap: 4 },
+  railCard: { width: 272, borderRadius: 24, padding: 18, gap: 4 },
   livePill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -870,7 +887,7 @@ const styles = StyleSheet.create({
   railTimer: { fontFamily: fonts.num, fontSize: 16, fontVariant: ['tabular-nums'] },
   railTitle: { fontFamily: fonts.display, fontSize: 20, lineHeight: 25, letterSpacing: -0.5, marginTop: 12 },
   railSub: { fontFamily: fonts.body, fontSize: 13 },
-  railBtn: { borderRadius: 999, paddingHorizontal: 14, height: 34, justifyContent: 'center' },
+  railBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, paddingHorizontal: 14, height: 36 },
   railBtnText: { fontFamily: fonts.bodyBold, fontSize: 13 },
   filterPill: {
     flexDirection: 'row',

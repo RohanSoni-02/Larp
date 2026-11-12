@@ -84,7 +84,7 @@ export default function AddSkillScreen() {
         <Text accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>Add a skill</Text>
       </View>
       <Text style={[styles.subtitle, { color: colors.muted }]}>
-        Pick one — it starts with a simple community tree you can make your own later. Or create your own from scratch.
+        Pick one. It starts with a simple community tree you can make your own later, or create your own from scratch.
       </Text>
 
       <Card style={styles.sphereCard}>
@@ -108,6 +108,7 @@ export default function AddSkillScreen() {
 
       <Button
         title="Create your own skill"
+        icon="plus"
         variant="secondary"
         onPress={() => router.push('/skills/create')}
         style={{ marginTop: 14, marginBottom: 8 }}
@@ -116,21 +117,29 @@ export default function AddSkillScreen() {
       {CATEGORIES.map((cat) => {
         const open = openCategory === cat.category;
         return (
-          <View key={cat.category} style={[styles.category, { borderColor: colors.line, backgroundColor: colors.surface }]}>
+          <View key={cat.category} style={[styles.category, { backgroundColor: colors.surface2 }]}>
             <Pressable
               style={styles.categoryHeader}
               onPress={() => setOpenCategory(open ? null : cat.category)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: open }}
               accessibilityLabel={`${cat.title} category`}
             >
               <Text style={[styles.categoryTitle, { color: colors.ink }]}>{cat.title}</Text>
-              <Icon name="chevron-right" size={16} color={colors.muted} />
+              <Text style={[styles.categoryCount, { color: colors.muted }]}>{cat.names.length}</Text>
+              <View style={open ? styles.chevronOpen : undefined}>
+                <Icon name="chevron-right" size={14} color={colors.muted} weight="semibold" />
+              </View>
             </Pressable>
             {open
               ? cat.names.map((name, i) => (
-                  <View key={name} style={[styles.nameRow, { borderTopColor: colors.line }]}>
+                  <View key={name} style={[styles.nameRow, { borderTopColor: colors.surface3 }]}>
                     <Text style={[styles.nameText, { color: colors.ink }]}>{name}</Text>
                     {owned.has(name.toLowerCase()) ? (
-                      <Text style={[styles.ownedText, { color: colors.good }]}>Added</Text>
+                      <View style={styles.owned}>
+                        <Icon name="check" size={13} color={colors.good} weight="bold" />
+                        <Text style={[styles.ownedText, { color: colors.good }]}>Added</Text>
+                      </View>
                     ) : (
                       <Button
                         title={busyName === name ? 'Adding…' : 'Add'}
@@ -146,7 +155,6 @@ export default function AddSkillScreen() {
           </View>
         );
       })}
-      <View style={{ height: 24 }} />
     </Screen>
   );
 }
@@ -154,7 +162,7 @@ export default function AddSkillScreen() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1 },
-  subtitle: { fontFamily: fonts.body, fontSize: 14, marginTop: 6, lineHeight: 20 },
+  subtitle: { fontFamily: fonts.body, fontSize: 14.5, marginTop: 8, lineHeight: 21 },
   sphereCard: { marginTop: 14, alignItems: 'center', overflow: 'hidden' },
   sphereHeader: {
     width: '100%',
@@ -165,10 +173,13 @@ const styles = StyleSheet.create({
   },
   sphereTitle: { fontFamily: fonts.bodyBold, fontSize: 15 },
   sphereHint: { fontFamily: fonts.body, fontSize: 12.5 },
-  category: { borderWidth: 1, borderRadius: 16, marginTop: 12, overflow: 'hidden' },
-  categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  categoryTitle: { fontFamily: fonts.bodyBold, fontSize: 16 },
-  nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 9, borderTopWidth: 1 },
+  category: { borderRadius: 18, marginTop: 8, overflow: 'hidden' },
+  categoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, minHeight: 54 },
+  categoryTitle: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 16, letterSpacing: -0.2 },
+  categoryCount: { fontFamily: fonts.num, fontSize: 16 },
+  chevronOpen: { transform: [{ rotate: '90deg' }] },
+  owned: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 34 },
+  nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
   nameText: { fontFamily: fonts.body, fontSize: 15, flex: 1, marginRight: 10 },
   ownedText: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });

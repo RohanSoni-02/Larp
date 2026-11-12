@@ -1,12 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { LeaderboardCard } from '@/components/ui/leaderboard-card';
 import { Button } from '@/src/components/Button';
 import { Screen } from '@/src/components/Screen';
 import { EmptyState } from '@/src/components/EmptyState';
 import { NavBar } from '@/src/components/Header';
+import { Skeleton } from '@/src/components/Skeleton';
 import { Seg } from '@/src/components/Seg';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useLeaderboard, useMyGuildIds, useSetGuildMember } from '@/src/features/leaderboard/hooks';
@@ -61,13 +62,13 @@ export default function LeaderboardScreen() {
       list.map((r, idx) => ({
         userId: r.userId,
         rank: r.rank || idx + 1,
-        userName: r.userId === meId ? `${r.name} (You)` : r.name,
+        userName: r.name,
         byline: `${tierName(r.tier)} · ${r.sessions} sessions${r.nodesLanded > 0 ? ` · ${r.nodesLanded} landed` : ''}`,
         value: r.minutes,
         displayed: true,
         avatarColor: r.color,
       })),
-    [list, meId],
+    [list],
   );
 
   function openUser(userId: string) {
@@ -108,7 +109,11 @@ export default function LeaderboardScreen() {
       ) : null}
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} />
+        <View style={{ gap: 10, marginTop: 20 }} accessibilityLabel="Loading leaderboard">
+          <Skeleton height={220} radius={24} />
+          <Skeleton height={56} radius={16} />
+          <Skeleton height={56} radius={16} />
+        </View>
       ) : list.length === 0 ? (
         <EmptyState icon="podium" title="No one on the board yet" body="Log a session and you’ll take first place." />
       ) : (
@@ -131,7 +136,6 @@ export default function LeaderboardScreen() {
           />
         </View>
       )}
-      <View style={{ height: 30 }} />
     </Screen>
   );
 }
@@ -139,5 +143,5 @@ export default function LeaderboardScreen() {
 const styles = StyleSheet.create({
   kicker: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 1.2 },
   title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1, marginTop: 2 },
-  sub: { fontFamily: fonts.body, fontSize: 14, marginTop: 4, lineHeight: 19 },
+  sub: { fontFamily: fonts.body, fontSize: 14.5, marginTop: 8, lineHeight: 21 },
 });

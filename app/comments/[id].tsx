@@ -3,7 +3,10 @@ import { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Avatar } from '@/src/components/Avatar';
-import { Button } from '@/src/components/Button';
+import { EmptyState } from '@/src/components/EmptyState';
+import { NavBar } from '@/src/components/Header';
+import { Icon } from '@/src/components/Icon';
+import { PressableScale } from '@/src/components/PressableScale';
 import { Screen } from '@/src/components/Screen';
 import { useAddComment, useComments } from '@/src/features/posts/comments';
 import { formatTime } from '@/src/lib/format';
@@ -72,56 +75,75 @@ export default function CommentsScreen() {
     );
   };
 
-  return (
-    <Screen scroll>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.ink }]}>Comments</Text>
-        <Button title="Close" variant="ghost" size="sm" onPress={() => router.back()} />
-      </View>
+  const canSend = Boolean(body.trim()) && !addComment.isPending;
 
+  return (
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <Screen
+      scroll
+      header={<NavBar title="Comments" onClose={() => router.back()} divider />}
+      footer={
+        <View>
+          {replyTo ? (
+            <Pressable
+              onPress={() => setReplyTo(null)}
+              style={styles.replyToPill}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`Stop replying to ${replyTo.authorName}`}
+            >
+              <Text style={[styles.replyToText, { color: colors.muted }]}>Replying to {replyTo.authorName}</Text>
+              <Icon name="close" size={11} color={colors.muted} weight="bold" />
+            </Pressable>
+          ) : null}
+          <View style={[styles.inputRow, { backgroundColor: colors.surface2 }]}>
+            <TextInput
+              value={body}
+              onChangeText={setBody}
+              placeholder={replyTo ? `Reply to ${replyTo.authorName}…` : 'Add a comment…'}
+              placeholderTextColor={colors.subtle}
+              selectionColor={colors.accent}
+              style={[styles.input, { color: colors.ink }]}
+              multiline
+              accessibilityLabel="Comment text"
+            />
+            <PressableScale
+              onPress={send}
+              scale={0.9}
+              disabled={!canSend}
+              disabledOpacity={0.35}
+              accessibilityRole="button"
+              accessibilityLabel="Post comment"
+              style={[styles.send, { backgroundColor: colors.accent }]}
+            >
+              <Icon name="send" size={17} color={colors.accentInk} weight="bold" />
+            </PressableScale>
+          </View>
+        </View>
+      }
+    >
       {topLevel.length === 0 ? (
-        <Text style={[styles.empty, { color: colors.muted }]}>No comments yet. Say something kind and specific.</Text>
+        <EmptyState icon="comment" title="No comments yet" body="Say something kind and specific." />
       ) : (
         topLevel.map((c) => (
           <CommentItem key={c.id} comment={c} replies={repliesByParent.get(c.id) ?? []} onReply={setReplyTo} />
         ))
       )}
-
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={[styles.inputRow, { borderColor: colors.line, backgroundColor: colors.surface }]}>
-          {replyTo ? (
-            <Pressable onPress={() => setReplyTo(null)} style={styles.replyToPill}>
-              <Text style={[styles.replyToText, { color: colors.muted }]}>Replying to {replyTo.authorName} ✕</Text>
-            </Pressable>
-          ) : null}
-          <TextInput
-            value={body}
-            onChangeText={setBody}
-            placeholder={replyTo ? `Reply to ${replyTo.authorName}…` : 'Add a comment…'}
-            placeholderTextColor={colors.muted}
-            style={[styles.input, { color: colors.ink }]}
-            multiline
-            accessibilityLabel="Comment text"
-          />
-          <Button title="Post" size="sm" onPress={send} disabled={!body.trim() || addComment.isPending} loading={addComment.isPending} />
-        </View>
-      </KeyboardAvoidingView>
-      <View style={{ height: 20 }} />
     </Screen>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  title: { fontFamily: fonts.display, fontSize: 22 },
-  empty: { fontFamily: fonts.body, fontSize: 15, textAlign: 'center', marginTop: 30 },
-  comment: { flexDirection: 'row', gap: 10, paddingVertical: 12 },
+  flex: { flex: 1 },
+  comment: { flexDirection: 'row', gap: 12, paddingVertical: 12 },
   commentMeta: { fontFamily: fonts.body, fontSize: 13 },
   commentBody: { fontFamily: fonts.body, fontSize: 15, marginTop: 3, lineHeight: 21 },
   replyLink: { fontFamily: fonts.bodyBold, fontSize: 13, marginTop: 6 },
   reply: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  inputRow: { borderWidth: 1, borderRadius: 16, padding: 10, marginTop: 8, gap: 8 },
-  replyToPill: { alignSelf: 'flex-start' },
-  replyToText: { fontFamily: fonts.body, fontSize: 12.5 },
-  input: { fontFamily: fonts.body, fontSize: 15, minHeight: 38, maxHeight: 120 },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, borderRadius: 24, paddingLeft: 16, paddingRight: 6, paddingVertical: 6 },
+  replyToPill: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginBottom: 8, marginLeft: 4 },
+  replyToText: { fontFamily: fonts.bodyMedium, fontSize: 12.5 },
+  input: { flex: 1, fontFamily: fonts.body, fontSize: 15.5, minHeight: 36, maxHeight: 120, paddingVertical: 8 },
+  send: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });
