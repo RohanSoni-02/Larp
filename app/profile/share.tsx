@@ -7,6 +7,7 @@ import { Button } from '@/src/components/Button';
 import { NavBar } from '@/src/components/Header';
 import { Icon } from '@/src/components/Icon';
 import { Screen } from '@/src/components/Screen';
+import { LogoMark } from '@/src/components/Wordmark';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useMyProfile } from '@/src/features/profile/hooks';
 import { usePortfolio } from '@/src/features/trees/hooks';
@@ -75,9 +76,7 @@ export default function ShareCardScreen() {
             ) : null}
 
             <View style={styles.cardFoot}>
-              <View style={[styles.logo, { backgroundColor: colors.accent }]}>
-                <Text style={[styles.logoText, { color: colors.accentInk }]}>L</Text>
-              </View>
+              <LogoMark size={22} />
               <Text style={[styles.footText, { color: colors.nightMuted }]}>larping · get good at things, together</Text>
             </View>
           </View>
@@ -109,9 +108,7 @@ const styles = StyleSheet.create({
   skillTime: { fontFamily: fonts.num, fontSize: 17, fontVariant: ['tabular-nums'] },
   tier: { borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 10, height: 24, justifyContent: 'center' },
   tierText: { fontFamily: fonts.bodyBold, fontSize: 11.5 },
-  cardFoot: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logo: { width: 22, height: 22, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontFamily: fonts.numHeavy, fontSize: 15, lineHeight: 18 },
+  cardFoot: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   footText: { fontFamily: fonts.bodyMedium, fontSize: 12.5 },
   tip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 18 },
   tipText: { fontFamily: fonts.body, fontSize: 13 },
