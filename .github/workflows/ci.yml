@@ -26,6 +26,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0 # match the supabase devDependency; config.toml uses keys the action's default CLI rejects
       - run: supabase start
       - run: supabase db reset # applies migrations + seed.sql fresh
       - run: sudo apt-get update && sudo apt-get install -y postgresql-client
