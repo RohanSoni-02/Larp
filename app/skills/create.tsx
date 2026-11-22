@@ -10,9 +10,8 @@ import { PressableScale } from '@/src/components/PressableScale';
 import { Screen } from '@/src/components/Screen';
 import { NavBar } from '@/src/components/Header';
 import { useSession } from '@/src/features/auth/SessionProvider';
-import { addSkillToPortfolio } from '@/src/features/skills/api';
 import { findNearDuplicate, SWATCHES, TREE_TEMPLATE } from '@/src/features/skills/catalog';
-import { useCreateCustomSkill, useUsableSkills } from '@/src/features/skills/hooks';
+import { useAddSkillToPortfolio, useCreateCustomSkill, useUsableSkills } from '@/src/features/skills/hooks';
 import { fonts, useTheme } from '@/src/theme';
 import { CATEGORY_LABELS, type SkillCategory } from '@/src/types/app';
 
@@ -24,6 +23,8 @@ export default function CreateSkillScreen() {
   const meId = session?.user?.id;
   const { data: usable } = useUsableSkills();
   const createSkill = useCreateCustomSkill();
+  const addToPortfolio = useAddSkillToPortfolio();
+  const busy = createSkill.isPending || addToPortfolio.isPending;
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<SkillCategory>('crafts');
@@ -52,10 +53,20 @@ export default function CreateSkillScreen() {
         classTitle: classTitle.trim() || 'Adventurer',
         branches: TREE_TEMPLATE.map((b, i) => ({ name: b.branch, steps: steps[i] ?? [] })),
       });
-      await addSkillToPortfolio(meId, skillId);
+      await addToPortfolio.mutateAsync(skillId);
       router.back();
     } catch (e) {
       Alert.alert('Could not create skill', e instanceof Error ? e.message : 'Try again.');
+    }
+  };
+
+  const addExisting = async () => {
+    if (!duplicate) return;
+    try {
+      await addToPortfolio.mutateAsync(duplicate.id);
+      router.back();
+    } catch (e) {
+      Alert.alert('Could not add skill', e instanceof Error ? e.message : 'Try again.');
     }
   };
 
@@ -67,11 +78,11 @@ export default function CreateSkillScreen() {
       header={<NavBar onClose={() => router.back()} />}
       footer={
         <Button
-          title={createSkill.isPending ? 'Creating…' : 'Create skill'}
+          title={busy ? 'Creating…' : 'Create skill'}
           size="lg"
           onPress={submit}
-          disabled={!name.trim() || Boolean(duplicate) || createSkill.isPending}
-          loading={createSkill.isPending}
+          disabled={!name.trim() || Boolean(duplicate) || busy}
+          loading={busy}
         />
       }
     >
@@ -81,9 +92,21 @@ export default function CreateSkillScreen() {
 
       <Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Kendama" />
       {duplicate ? (
-        <Text style={[styles.duplicate, { color: colors.bad }]}>
-          “{duplicate.name}” already exists. Add that one instead so the community grows together.
-        </Text>
+        <View style={styles.duplicateBox}>
+          <Text style={[styles.duplicate, { color: colors.bad }]}>
+            “{duplicate.name}” already exists. Add that one instead so the community grows together.
+          </Text>
+          <Button
+            title={`Add “${duplicate.name}”`}
+            icon="plus"
+            size="sm"
+            variant="secondary"
+            onPress={addExisting}
+            loading={addToPortfolio.isPending}
+            disabled={busy}
+            style={styles.duplicateAction}
+          />
+        </View>
       ) : null}
 
       <Text style={[styles.label, { color: colors.muted }]}>Category</Text>
@@ -145,7 +168,9 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 34, letterSpacing: -1 },
   label: { fontFamily: fonts.bodyMedium, fontSize: 13, marginTop: 16, marginBottom: 8 },
   input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11, fontFamily: fonts.body, fontSize: 15 },
-  duplicate: { fontFamily: fonts.body, fontSize: 13, marginTop: 6, lineHeight: 18 },
+  duplicateBox: { marginTop: -6, marginBottom: 4 },
+  duplicate: { fontFamily: fonts.body, fontSize: 13, lineHeight: 18 },
+  duplicateAction: { alignSelf: 'flex-start', marginTop: 8 },
   wrapRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   swatchRing: { borderWidth: 2, borderRadius: 22, padding: 2 },
   swatch: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },

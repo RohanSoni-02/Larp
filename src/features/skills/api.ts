@@ -39,8 +39,28 @@ export async function listUsableSkills(meId: string): Promise<Skill[]> {
   return (data ?? []) as Skill[];
 }
 
+/**
+ * The skill a name should resolve to before creating a custom one: an approved
+ * skill, or my own pending custom with that exact name (approved wins).
+ */
+export async function findUsableSkillId(name: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('skills')
+    .select('id')
+    .eq('lower_name', name.trim().toLowerCase())
+    .in('status', ['approved', 'pending'])
+    .order('status', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id ?? null;
+}
+
 /** Add a skill to my portfolio (totals forced to zero by the DB trigger). */
 export async function addSkillToPortfolio(meId: string, skillId: string): Promise<void> {
-  const { error } = await supabase.from('user_skills').upsert({ user_id: meId, skill_id: skillId });
+  // UPDATE is revoked on user_skills, so a merging upsert is denied outright.
+  const { error } = await supabase
+    .from('user_skills')
+    .upsert({ user_id: meId, skill_id: skillId }, { ignoreDuplicates: true });
   if (error) throw error;
 }

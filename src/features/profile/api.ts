@@ -68,14 +68,20 @@ export async function completeOnboarding(input: OnboardingInput): Promise<void> 
   if (skillIds.length > 0) {
     const { error: skillsError } = await supabase
       .from('user_skills')
-      .upsert(skillIds.map((skillId) => ({ user_id: userId, skill_id: skillId })));
+      .upsert(
+        skillIds.map((skillId) => ({ user_id: userId, skill_id: skillId })),
+        { ignoreDuplicates: true },
+      );
     if (skillsError) throw skillsError;
   }
 
   if (followUserIds.length > 0) {
     const { error: followsError } = await supabase
       .from('follows')
-      .upsert(followUserIds.map((followeeId) => ({ follower_id: userId, followee_id: followeeId })));
+      .upsert(
+        followUserIds.map((followeeId) => ({ follower_id: userId, followee_id: followeeId })),
+        { ignoreDuplicates: true },
+      );
     if (followsError) throw followsError;
   }
 }

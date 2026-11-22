@@ -9,10 +9,11 @@ import { Icon } from '@/src/components/Icon';
 import { Screen } from '@/src/components/Screen';
 import { NavBar } from '@/src/components/Header';
 import { useSession } from '@/src/features/auth/SessionProvider';
-import { addSkillToPortfolio } from '@/src/features/skills/api';
+import { findUsableSkillId } from '@/src/features/skills/api';
 import { CATEGORIES, createCustomSkill, SWATCHES, TREE_TEMPLATE } from '@/src/features/skills/catalog';
-import { useUsableSkills } from '@/src/features/skills/hooks';
+import { useAddSkillToPortfolio } from '@/src/features/skills/hooks';
 import { buildCatalogSphereImages } from '@/src/features/skills/skillImages';
+import { useMyPortfolio } from '@/src/features/trees/hooks';
 import { fonts, useTheme } from '@/src/theme';
 import type { SkillCategory } from '@/src/types/app';
 
@@ -20,13 +21,14 @@ export default function AddSkillScreen() {
   const { colors } = useTheme();
   const { session } = useSession();
   const meId = session?.user?.id;
-  const { data: usable } = useUsableSkills();
+  const { data: portfolio } = useMyPortfolio();
+  const { mutateAsync: addToPortfolio } = useAddSkillToPortfolio();
   const [openCategory, setOpenCategory] = useState<SkillCategory | null>(CATEGORIES[0]!.category);
   const [busyName, setBusyName] = useState<string | null>(null);
 
   const owned = useMemo(
-    () => new Set((usable ?? []).filter((s) => s.status !== 'approved').map((s) => s.lower_name)),
-    [usable],
+    () => new Set((portfolio ?? []).map((entry) => entry.skills?.lower_name).filter(Boolean)),
+    [portfolio],
   );
 
   const quickAdd = useCallback(
@@ -34,15 +36,17 @@ export default function AddSkillScreen() {
       if (!meId || busyName) return;
       setBusyName(name);
       try {
-        const skillId = await createCustomSkill(meId, {
-          name,
-          category,
-          color: SWATCHES[index % SWATCHES.length]!,
-          kudoLabel: 'Nice progress',
-          classTitle: 'Adventurer',
-          branches: TREE_TEMPLATE.map((b) => ({ name: b.branch, steps: b.steps })),
-        });
-        await addSkillToPortfolio(meId, skillId);
+        const skillId =
+          (await findUsableSkillId(name)) ??
+          (await createCustomSkill(meId, {
+            name,
+            category,
+            color: SWATCHES[index % SWATCHES.length]!,
+            kudoLabel: 'Nice progress',
+            classTitle: 'Adventurer',
+            branches: TREE_TEMPLATE.map((b) => ({ name: b.branch, steps: b.steps })),
+          }));
+        await addToPortfolio(skillId);
         router.back();
       } catch (e) {
         Alert.alert('Could not add skill', e instanceof Error ? e.message : 'Try again.');
@@ -50,7 +54,7 @@ export default function AddSkillScreen() {
         setBusyName(null);
       }
     },
-    [meId, busyName],
+    [meId, busyName, addToPortfolio],
   );
 
   const activeCategoryGroup = useMemo(
