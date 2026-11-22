@@ -137,7 +137,7 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
 
   const share = () =>
     void Share.share({
-      message: `${isMe ? 'My' : `${post.authorName}’s`} ${post.skillLower} session on Larping`,
+      message: `${isMe ? 'My' : `${post.authorName}’s`} ${post.skillLower} session on larpr`,
     });
 
   const summary = [

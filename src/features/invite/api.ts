@@ -13,8 +13,8 @@ export function buildInviteLink(handle: string, skillSlug?: string | null): stri
 export function inviteMessage(name: string, handle: string, skill?: { name: string; slug: string } | null): string {
   const link = buildInviteLink(handle, skill?.slug);
   return skill
-    ? `${name} is learning ${skill.name} on Larping — start it with them: ${link}`
-    : `${name} invited you to Larping, the Strava for skills: ${link}`;
+    ? `${name} is learning ${skill.name} on larpr — start it with them: ${link}`
+    : `${name} invited you to larpr, the Strava for skills: ${link}`;
 }
 
 export type InvitePreview = {

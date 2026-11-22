@@ -1,7 +1,7 @@
 {
-  "name": "larping",
+  "name": "larpr",
   "version": "0.1.0",
-  "description": "Larping — a Strava for skills. Log, prove and show off progress in any hobby.",
+  "description": "larpr — a Strava for skills. Log, prove and show off progress in any hobby.",
   "license": "UNLICENSED",
   "private": true,
   "main": "expo-router/entry",

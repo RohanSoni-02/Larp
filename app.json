@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Larping",
+    "name": "larpr",
     "slug": "larping",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "larping",
+    "scheme": "larpr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -47,14 +47,14 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Larping uses the camera so you can prove your practice sessions and Larp Checks.",
-          "microphonePermission": "Larping uses the microphone for short practice clips, up to 30 seconds."
+          "cameraPermission": "larpr uses the camera so you can prove your practice sessions and Larp Checks.",
+          "microphonePermission": "larpr uses the microphone for short practice clips, up to 30 seconds."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Larping needs access to your photos so you can attach proof to your sessions."
+          "photosPermission": "larpr needs access to your photos so you can attach proof to your sessions."
         }
       ],
       [

@@ -1,4 +1,4 @@
-# Larping
+# larpr
 
 A Strava for skills. People log, prove and show off progress in hobbies like piano, candle
 making, pottery or lifting — and connect with others learning the same thing.

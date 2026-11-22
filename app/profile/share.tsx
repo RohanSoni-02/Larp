@@ -30,7 +30,7 @@ export default function ShareCardScreen() {
 
   const shareText = () => {
     void Share.share({
-      message: `I'm level ${level.level} on Larping${top.length > 0 ? ` — ${top.map((p) => `${p.skills.name} (${tierName(p.tier)})`).join(', ')}` : ''}. Come practice with me: @${profile.handle}`,
+      message: `I'm level ${level.level} on larpr${top.length > 0 ? ` — ${top.map((p) => `${p.skills.name} (${tierName(p.tier)})`).join(', ')}` : ''}. Come practice with me: @${profile.handle}`,
     });
   };
 
@@ -77,7 +77,7 @@ export default function ShareCardScreen() {
 
             <View style={styles.cardFoot}>
               <LogoMark size={22} />
-              <Text style={[styles.footText, { color: colors.nightMuted }]}>larping · get good at things, together</Text>
+              <Text style={[styles.footText, { color: colors.nightMuted }]}>larpr · get good at things, together</Text>
             </View>
           </View>
         </Appear>

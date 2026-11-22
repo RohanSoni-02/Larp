@@ -52,9 +52,9 @@ export function Wordmark({ size = 30 }: { size?: number }) {
   const { colors } = useTheme();
   const k = size / 30;
   return (
-    <View style={[styles.row, { gap: 11 * k }]} accessibilityRole="header" accessibilityLabel="Larping">
+    <View style={[styles.row, { gap: 11 * k }]} accessibilityRole="header" accessibilityLabel="larpr">
       <LogoMark size={size} />
-      <Text style={[styles.word, { color: colors.ink, fontSize: 27 * k, lineHeight: 31 * k, letterSpacing: -1.1 * k }]}>larping</Text>
+      <Text style={[styles.word, { color: colors.ink, fontSize: 27 * k, lineHeight: 31 * k, letterSpacing: -1.1 * k }]}>larpr</Text>
     </View>
   );
 }

@@ -375,7 +375,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
             <EmptyState
               icon="compare"
               title={isMe ? 'Your glow-ups live here' : 'No glow-ups yet'}
-              body="Add a photo to your sessions and Larping lines up day 1 vs day 90 automatically."
+              body="Add a photo to your sessions and larpr lines up day 1 vs day 90 automatically."
             />
           )}
         </View>

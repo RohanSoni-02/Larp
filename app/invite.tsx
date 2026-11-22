@@ -71,7 +71,7 @@ export default function InviteScreen() {
           icon="ticket"
           title="This invite link is incomplete"
           body="Ask your friend to send it again."
-          action={<Button title="Back to Larping" variant="secondary" size="sm" onPress={() => router.replace('/')} />}
+          action={<Button title="Back to larpr" variant="secondary" size="sm" onPress={() => router.replace('/')} />}
         />
       ) : isLoading ? (
         <View style={{ gap: 14, marginTop: 30 }} accessibilityLabel="Loading invite">
@@ -100,7 +100,7 @@ export default function InviteScreen() {
                   <Icon name="people" size={28} color={colors.accentStrong} />
                 </View>
                 <Text style={[styles.name, { color: colors.ink }]}>A friend invited you</Text>
-                <Text style={[styles.meta, { color: colors.muted }]}>Come practise on Larping.</Text>
+                <Text style={[styles.meta, { color: colors.muted }]}>Come practise on larpr.</Text>
               </>
             )}
             {preview?.skill ? (
@@ -133,7 +133,7 @@ export default function InviteScreen() {
               <>
                 <Button
                   size="lg"
-                  title="Join Larping"
+                  title="Join larpr"
                   onPress={() => {
                     prefillOnboarding();
                     router.replace('/welcome');
@@ -162,7 +162,7 @@ export default function InviteScreen() {
                 <Text style={[styles.meta, { color: colors.muted, textAlign: 'center' }]}>
                   This is your own invite. Share it with a friend.
                 </Text>
-                <Button title="Back to Larping" variant="secondary" onPress={() => router.replace('/')} />
+                <Button title="Back to larpr" variant="secondary" onPress={() => router.replace('/')} />
               </>
             ) : (
               <>

@@ -31,7 +31,7 @@ function copy(item: ActivityItem): string {
       if (item.data.kind === 'feedback_request') return `🎓 ${name} asked for your feedback on ${skill}`;
       if (item.data.kind === 'feedback_answered') return `🎓 ${name} answered your ${skill} question`;
       if (item.data.kind === 'feedback_declined') return `${name} can’t review your ${skill} session right now`;
-      return String(item.data.body ?? 'Update from Larping');
+      return String(item.data.body ?? 'Update from larpr');
     }
     default:
       return `${name} did something`;
