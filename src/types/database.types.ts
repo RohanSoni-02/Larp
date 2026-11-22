@@ -120,6 +120,62 @@ export type Database = {
           },
         ];
       };
+      conversation_members: {
+        Row: {
+          conversation_id: string;
+          last_read_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          conversation_id: string;
+          last_read_at?: string;
+          user_id: string;
+        };
+        Update: {
+          conversation_id?: string;
+          last_read_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_members_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      conversations: {
+        Row: {
+          created_at: string;
+          id: string;
+          last_message_at: string | null;
+          pair_key: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          last_message_at?: string | null;
+          pair_key: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          last_message_at?: string | null;
+          pair_key?: string;
+        };
+        Relationships: [];
+      };
       coop_rooms: {
         Row: {
           created_at: string;
@@ -751,6 +807,46 @@ export type Database = {
             columns: ["session_id"];
             isOneToOne: false;
             referencedRelation: "sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          body: string;
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          sender_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          sender_id: string;
+        };
+        Update: {
+          body?: string;
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          sender_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey";
+            columns: ["sender_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];
@@ -1841,6 +1937,22 @@ export type Database = {
         }[];
       };
       has_posted_larp_check: { Args: { p_window_id: string }; Returns: boolean };
+      is_conversation_blocked: { Args: { p_conversation_id: string }; Returns: boolean };
+      is_conversation_member: { Args: { p_conversation_id: string }; Returns: boolean };
+      list_conversations: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          conversation_id: string;
+          last_body: string;
+          last_message_at: string;
+          last_sender_id: string;
+          other_color: string;
+          other_handle: string;
+          other_id: string;
+          other_name: string;
+          unread_count: number;
+        }[];
+      };
       list_mentors: {
         Args: { p_skill_id: string };
         Returns: {
@@ -1852,6 +1964,7 @@ export type Database = {
           user_id: string;
         }[];
       };
+      mark_conversation_read: { Args: { p_conversation_id: string }; Returns: undefined };
       mark_node_in_progress: { Args: { p_node_id: string }; Returns: undefined };
       mark_notifications_read: { Args: Record<PropertyKey, never>; Returns: undefined };
       plan_larp_checks: { Args: { p_user_id?: string }; Returns: number };
@@ -1897,6 +2010,7 @@ export type Database = {
       set_open_to_feedback: { Args: { p_open: boolean; p_skill_id: string }; Returns: undefined };
       show_limit: { Args: Record<PropertyKey, never>; Returns: number };
       show_trgm: { Args: { "": string }; Returns: string[] };
+      start_conversation: { Args: { p_user_id: string }; Returns: string };
     };
     Enums: {
       glowup_status: "queued" | "processing" | "done" | "failed";
@@ -1904,14 +2018,7 @@ export type Database = {
       media_status: "pending" | "approved" | "rejected";
       node_status: "in_progress" | "landed";
       notification_type:
-        | "kudos"
-        | "comment"
-        | "follow"
-        | "tier_up"
-        | "vouch"
-        | "larp_check"
-        | "quest"
-        | "system";
+        "kudos" | "comment" | "follow" | "tier_up" | "vouch" | "larp_check" | "quest" | "system";
       report_status: "open" | "resolved" | "dismissed";
       rsvp_status: "going" | "maybe";
       shield_event_kind: "earned" | "used";
@@ -1966,8 +2073,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -1989,8 +2095,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -2012,8 +2117,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
@@ -2027,8 +2131,7 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }

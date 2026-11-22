@@ -20,6 +20,7 @@ import { Wordmark } from '@/src/components/Wordmark';
 import { useUnreadCount } from '@/src/features/activity/hooks';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useMyCheck, useTodayWindow } from '@/src/features/larpcheck/hooks';
+import { useUnreadConversationCount } from '@/src/features/messages/hooks';
 import { useFeed, useStoryPosts } from '@/src/features/posts/hooks';
 import { useMyProfile, useMyStreak, useProfileStats } from '@/src/features/profile/hooks';
 import { dayKey, formatClock, formatTime } from '@/src/lib/format';
@@ -269,6 +270,7 @@ export default function HomeScreen() {
   const meId = session?.user?.id;
   const { data: profile } = useMyProfile(meId);
   const { data: unread } = useUnreadCount();
+  const unreadChats = useUnreadConversationCount();
   const { data: window } = useTodayWindow();
   const { data: myCheck } = useMyCheck(window?.id);
   const liveLeft = useSecondsLeft(window?.firedAt);
@@ -332,6 +334,12 @@ export default function HomeScreen() {
                 <Text style={[styles.levelPillLabel, { color: colors.muted }]}>LV</Text>
                 <Text style={[styles.levelPillText, { color: colors.ink }]}>{level.level}</Text>
               </View>
+              <IconButton
+                name="chat"
+                onPress={() => router.push('/messages')}
+                accessibilityLabel={`Messages${unreadChats ? `, ${unreadChats} unread` : ''}`}
+                badge={unreadChats}
+              />
               <IconButton
                 name="bell"
                 onPress={() => router.push('/activity')}

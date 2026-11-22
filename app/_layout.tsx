@@ -12,6 +12,7 @@ import { warnIfMissing } from '@/src/lib/env';
 import { queryClient } from '@/src/lib/queryClient';
 import '@/src/lib/webAlert';
 import { SessionProvider, useSession } from '@/src/features/auth/SessionProvider';
+import { MessagesBridge } from '@/src/features/messages/MessagesBridge';
 import { useMyProfile } from '@/src/features/profile/hooks';
 import { AppThemeProvider, useAppFonts, useTheme } from '@/src/theme';
 
@@ -73,6 +74,7 @@ function RootNavigator() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <NotificationBridge userId={session?.user?.id} />
+      <MessagesBridge userId={session?.user?.id} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
@@ -99,6 +101,9 @@ function RootNavigator() {
         <Stack.Screen name="mentorship/index" options={{ presentation: 'card' }} />
         <Stack.Screen name="mentorship/ask" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/larp-check" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="messages/index" options={{ presentation: 'card' }} />
+        <Stack.Screen name="messages/[id]" options={{ presentation: 'card' }} />
+        <Stack.Screen name="messages/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="invite" options={{ presentation: 'card', gestureEnabled: false }} />
       </Stack>
     </>

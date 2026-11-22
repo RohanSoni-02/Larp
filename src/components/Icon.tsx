@@ -27,6 +27,7 @@ const ICONS = {
   bell: { sf: 'bell', sfOn: 'bell.fill', ion: 'notifications-outline', ionOn: 'notifications' },
   heart: { sf: 'heart', sfOn: 'heart.fill', ion: 'heart-outline', ionOn: 'heart' },
   comment: { sf: 'bubble.right', ion: 'chatbubble-outline' },
+  chat: { sf: 'bubble.left.and.bubble.right', sfOn: 'bubble.left.and.bubble.right.fill', ion: 'chatbubbles-outline', ionOn: 'chatbubbles' },
   share: { sf: 'paperplane', ion: 'paper-plane-outline' },
   'share-up': { sf: 'square.and.arrow.up', ion: 'share-outline' },
   bookmark: { sf: 'bookmark', sfOn: 'bookmark.fill', ion: 'bookmark-outline', ionOn: 'bookmark' },

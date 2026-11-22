@@ -17,6 +17,7 @@ import { Stamp } from '@/src/components/Stamp';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { inviteMessage } from '@/src/features/invite/api';
 import { useSignedUrl } from '@/src/features/media/api';
+import { useStartConversation } from '@/src/features/messages/hooks';
 import { useSetOpenToFeedback } from '@/src/features/mentorship/hooks';
 import { useSetFollowing, useUserPosts } from '@/src/features/posts/hooks';
 import { buildPortfolioSphereImages } from '@/src/features/skills/skillImages';
@@ -247,6 +248,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
   const { data: posts } = useUserPosts(userId);
   const { data: glowups } = useGlowups(userId);
   const setFollowing = useSetFollowing();
+  const startChat = useStartConversation();
   const [tab, setTab] = useState<'posts' | 'glowups' | 'skills'>('posts');
 
   const level = useMemo(() => levelFromXp(profile?.xp_total ?? 0), [profile?.xp_total]);
@@ -319,15 +321,31 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
               <Button title="Share profile" icon="share-up" variant="secondary" size="sm" style={styles.actionBtn} onPress={() => router.push('/profile/share')} />
             </>
           ) : (
-            <Button
-              title={counts?.followedByMe ? 'Following' : 'Follow'}
-              icon={counts?.followedByMe ? 'check' : 'person-add'}
-              variant={counts?.followedByMe ? 'secondary' : 'accent'}
-              size="sm"
-              style={styles.actionBtn}
-              loading={setFollowing.isPending}
-              onPress={() => setFollowing.mutate({ userId, follow: !counts?.followedByMe })}
-            />
+            <>
+              <Button
+                title={counts?.followedByMe ? 'Following' : 'Follow'}
+                icon={counts?.followedByMe ? 'check' : 'person-add'}
+                variant={counts?.followedByMe ? 'secondary' : 'accent'}
+                size="sm"
+                style={styles.actionBtn}
+                loading={setFollowing.isPending}
+                onPress={() => setFollowing.mutate({ userId, follow: !counts?.followedByMe })}
+              />
+              <Button
+                title="Message"
+                icon="chat"
+                variant="secondary"
+                size="sm"
+                style={styles.actionBtn}
+                loading={startChat.isPending}
+                onPress={() =>
+                  startChat.mutate(userId, {
+                    onSuccess: (id) => router.push({ pathname: '/messages/[id]', params: { id } }),
+                    onError: (e) => Alert.alert('Could not start chat', e instanceof Error ? e.message : 'Try again.'),
+                  })
+                }
+              />
+            </>
           )}
         </View>
       </View>
