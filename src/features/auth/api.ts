@@ -1,5 +1,6 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 
 import { env } from '@/src/lib/env';
@@ -31,6 +32,28 @@ export async function signInWithPassword(email: string, password: string): Promi
     password,
   });
   if (error) throw error;
+}
+
+/**
+ * Email + password sign-up. The profile row is created by the auth.users trigger.
+ * `needsConfirmation` is true when the project requires a confirmed email first.
+ */
+export async function signUpWithPassword(
+  email: string,
+  password: string,
+): Promise<{ needsConfirmation: boolean }> {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: { emailRedirectTo: Linking.createURL('/') },
+  });
+  if (error) throw error;
+  // With confirmations on, Supabase answers an already-registered address with
+  // an obfuscated user that has no identities instead of an error.
+  if (data.user && data.user.identities?.length === 0) {
+    throw new Error('An account with this email already exists. Sign in instead.');
+  }
+  return { needsConfirmation: !data.session };
 }
 
 export async function isAppleSignInAvailable(): Promise<boolean> {

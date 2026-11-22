@@ -138,7 +138,8 @@ export default function WelcomeScreen() {
       ) : null}
 
       <Appear delay={280} style={styles.cta}>
-        <Button title="Start larping" size="lg" onPress={() => router.push('/sign-in')} />
+        <Button title="Start larping" size="lg" onPress={() => router.push('/sign-up')} />
+        <Button title="I already have an account" variant="ghost" onPress={() => router.push('/sign-in')} />
         <Text style={[styles.fine, { color: colors.subtle }]}>
           Piano, pottery, pen spinning. If you can practise it, you can larp it.
         </Text>

@@ -10,6 +10,7 @@ import { initCrashReporting } from '@/src/lib/crashReporting';
 import { NotificationBridge } from '@/src/lib/NotificationBridge';
 import { warnIfMissing } from '@/src/lib/env';
 import { queryClient } from '@/src/lib/queryClient';
+import '@/src/lib/webAlert';
 import { SessionProvider, useSession } from '@/src/features/auth/SessionProvider';
 import { useMyProfile } from '@/src/features/profile/hooks';
 import { AppThemeProvider, useAppFonts, useTheme } from '@/src/theme';

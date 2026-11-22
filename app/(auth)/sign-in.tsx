@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Appear } from '@/src/components/Appear';
 import { Button } from '@/src/components/Button';
 import { Field } from '@/src/components/Field';
 import { NavBar } from '@/src/components/Header';
+import { Icon } from '@/src/components/Icon';
 import { Screen } from '@/src/components/Screen';
 import { Seg } from '@/src/components/Seg';
 import {
@@ -27,6 +28,7 @@ export default function SignInScreen() {
   const [mode, setMode] = useState<'password' | 'code'>('password');
   const [emailSent, setEmailSent] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [appleAvailable, setAppleAvailable] = useState(false);
 
   useEffect(() => {
@@ -35,10 +37,11 @@ export default function SignInScreen() {
 
   async function run(key: string, fn: () => Promise<void>) {
     setBusy(key);
+    setError(null);
     try {
       await fn();
-    } catch (error) {
-      Alert.alert('Sign-in failed', error instanceof Error ? error.message : 'Please try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sign-in failed. Please try again.');
     } finally {
       setBusy(null);
     }
@@ -191,6 +194,24 @@ export default function SignInScreen() {
             <Text style={[styles.note, { color: colors.subtle }]}>No password needed. We’ll email you a 6-digit code.</Text>
           </>
         )}
+
+        {error ? (
+          <View style={[styles.error, { backgroundColor: colors.surface2 }]} accessibilityRole="alert">
+            <Icon name="info" size={16} color={colors.bad} />
+            <Text style={[styles.errorText, { color: colors.bad }]}>{error}</Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          onPress={() => router.replace('/sign-up')}
+          hitSlop={10}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.link, pressed && { opacity: 0.55 }]}
+        >
+          <Text style={[styles.linkText, { color: colors.muted }]}>
+            New to larpr? <Text style={{ color: colors.accentStrong }}>Create an account</Text>
+          </Text>
+        </Pressable>
       </Appear>
     </Screen>
   );
@@ -212,4 +233,6 @@ const styles = StyleSheet.create({
   link: { alignSelf: 'center', marginTop: 18 },
   linkText: { fontFamily: fonts.bodyBold, fontSize: 14.5, letterSpacing: -0.15 },
   note: { fontFamily: fonts.body, fontSize: 13, textAlign: 'center', marginTop: 14 },
+  error: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, padding: 12, marginTop: 16 },
+  errorText: { flex: 1, fontFamily: fonts.bodyMedium, fontSize: 13.5, lineHeight: 19 },
 });
