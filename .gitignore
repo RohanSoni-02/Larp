@@ -49,3 +49,8 @@ supabase/.env
 # generated native folders
 /ios
 /android
+
+# Vercel
+.vercel/
+.vercel
+.env*

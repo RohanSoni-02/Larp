@@ -1,0 +1,9 @@
+# Local env files point at the local Supabase; production values come from Vercel env vars.
+.env
+.env.*
+!.env.example
+
+node_modules
+.expo
+dist
+web-build
