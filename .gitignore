@@ -54,3 +54,14 @@ supabase/.env
 .vercel/
 .vercel
 .env*
+
+# brag video intermediates (frames, downloaded fonts/icons, stills)
+brag-output/work/frames/
+brag-output/work/pkgs/
+brag-output/work/stills/
+brag-output/work/stills2/
+brag-output/work/fonts/
+brag-output/work/icons/
+brag-output/work/*.png
+brag-output/work/*.wav
+brag-output/work/index.html
