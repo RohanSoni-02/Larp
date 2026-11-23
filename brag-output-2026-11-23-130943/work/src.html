@@ -1,0 +1,366 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Brico;font-weight:700;src:url(fonts/BricolageGrotesque_700Bold.ttf)}
+@font-face{font-family:Brico;font-weight:800;src:url(fonts/BricolageGrotesque_800ExtraBold.ttf)}
+@font-face{font-family:Inter;font-weight:400;src:url(fonts/Inter_400Regular.ttf)}
+@font-face{font-family:Inter;font-weight:500;src:url(fonts/Inter_500Medium.ttf)}
+@font-face{font-family:Inter;font-weight:600;src:url(fonts/Inter_600SemiBold.ttf)}
+@font-face{font-family:Inter;font-weight:700;src:url(fonts/Inter_700Bold.ttf)}
+@font-face{font-family:Barlow;font-weight:600;src:url(fonts/BarlowCondensed_600SemiBold.ttf)}
+@font-face{font-family:Barlow;font-weight:700;src:url(fonts/BarlowCondensed_700Bold.ttf)}
+@font-face{font-family:Barlow;font-weight:800;src:url(fonts/BarlowCondensed_800ExtraBold.ttf)}
+:root{--s2:#F3F3F7;--s3:#E6E6EE;--ink:#0E0F1C;--muted:#5C5F72;--subtle:#9A9DAE;--line:#ECECF2;--fill:rgba(14,15,28,.06);
+--primary:#5B3DF5;--soft:#EEEAFF;--strong:#4A2DDB;--night:#12132A;--nightMuted:#A9ABC8;--gold:#B98100;--goldSoft:#FCF1D4;--good:#16A34A;--cal:#E0548A}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0D0E18}
+body{font-family:Inter;color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:absolute;inset:0;overflow:hidden}
+.scene{position:absolute;inset:0;display:none;overflow:hidden}
+.abs{position:absolute}
+.ico{display:inline-block;line-height:0;flex:none}
+.ico svg{width:100%;height:100%;fill:currentColor}
+.ico svg .ionicon-fill-none{fill:none}.ico svg .ionicon-stroke-width{stroke-width:32px}
+.disp{font-family:Brico;font-weight:800}
+.num{font-family:Barlow;font-weight:800;font-variant-numeric:tabular-nums}
+.cap{position:absolute;left:70px;right:70px;top:250px;text-align:center;font-family:Brico;font-weight:800;font-size:92px;line-height:1;letter-spacing:-3.4px;color:#fff}
+.cap em{font-style:normal;color:#B9A9FF}
+
+/* gym */
+#gym{position:absolute;inset:0;background:
+  radial-gradient(900px 700px at 20% 18%,rgba(255,170,80,.20),transparent 70%),
+  radial-gradient(800px 900px at 85% 70%,rgba(120,160,255,.10),transparent 70%),
+  linear-gradient(#171826,#0D0E18 60%,#0A0B12)}
+.strip{position:absolute;height:14px;border-radius:7px;background:#EAF2FF;box-shadow:0 0 30px 8px rgba(200,225,255,.35),0 0 120px 30px rgba(170,200,255,.12)}
+.dust{position:absolute;border-radius:50%;background:#fff}
+#floor{position:absolute;left:0;right:0;bottom:0;height:520px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.55));}
+
+/* LED interval timer */
+.led{position:absolute;left:50%;padding:26px 54px 22px;border-radius:22px;background:#08080B;border:4px solid #26262E;box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 0 0 2px #000;
+  font-family:Barlow;font-weight:800;color:#FF2D2D;letter-spacing:10px;text-shadow:0 0 10px rgba(255,40,40,.9),0 0 34px rgba(255,30,30,.55);white-space:nowrap}
+.led::after{content:"";position:absolute;inset:0;border-radius:18px;background:repeating-linear-gradient(0deg,rgba(0,0,0,.35) 0 3px,transparent 3px 6px),repeating-linear-gradient(90deg,rgba(0,0,0,.3) 0 3px,transparent 3px 6px);pointer-events:none}
+.led .ghost{position:absolute;inset:26px 54px 22px;color:rgba(255,45,45,.07);text-shadow:none}
+
+/* DM bubbles */
+.dm{position:absolute;display:flex;align-items:flex-end;gap:18px}
+.dm.me{flex-direction:row-reverse}
+.av{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:30px;flex:none}
+.bub{border-radius:40px;padding:26px 38px 30px;font-weight:600;font-size:52px;letter-spacing:-1.2px;line-height:1.12;max-width:760px}
+.them .bub{background:#2A2C40;color:#fff;border-bottom-left-radius:12px}
+.me .bub{background:var(--primary);color:#fff;border-bottom-right-radius:12px}
+.who{font-weight:600;font-size:26px;color:var(--nightMuted);margin:0 0 10px 8px}
+.me .who{text-align:right;margin:0 8px 10px 0}
+.stamp{position:absolute;left:50%;top:50%;display:flex;align-items:center;gap:24px;padding:14px 50px 22px 40px;border:13px solid #7A61FF;border-radius:36px;color:#8C76FF;
+  font-family:Brico;font-weight:800;font-size:150px;letter-spacing:-5px;line-height:1;background:rgba(13,14,24,.82);box-shadow:0 0 80px rgba(122,97,255,.35)}
+
+/* phone */
+.phone{position:absolute;width:414px;height:868px;border-radius:66px;background:#0E0F1C;padding:12px;
+  box-shadow:0 50px 100px rgba(0,0,0,.55),inset 0 0 0 2px #34364a;transform-origin:50% 50%}
+.screen{position:relative;width:390px;height:844px;border-radius:54px;overflow:hidden;background:#fff}
+.island{position:absolute;left:50%;top:22px;width:118px;height:34px;margin-left:-59px;border-radius:20px;background:#000;z-index:20}
+.status{position:absolute;left:0;right:0;top:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 46px;font-weight:600;font-size:16px;z-index:10}
+.btnP{position:absolute;left:20px;right:20px;bottom:34px;height:56px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:16px;background:var(--primary);color:#fff}
+.touch{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(14,15,28,.18);border:2px solid rgba(255,255,255,.8);z-index:30;opacity:0}
+.vtag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;background:var(--fill);font-weight:600;font-size:11.5px;color:var(--ink)}
+.tierpill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:0 8px;height:22px;background:var(--s2);font-weight:600;font-size:11.5px}
+.kudo{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:13px}
+.kudo .c{color:var(--muted)}
+.toast{position:absolute;left:90px;right:90px;display:flex;align-items:center;gap:20px;padding:22px 26px;border-radius:30px;background:rgba(30,31,48,.95);color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.45);z-index:40}
+.toast b{font-weight:700}
+.toast .t1{font-size:30px;font-weight:500;letter-spacing:-.4px;line-height:1.25}
+.row{display:flex;align-items:center;gap:16px;padding:20px 28px;border-radius:26px;background:rgba(255,255,255,.07);color:#fff;font-weight:600;font-size:38px;letter-spacing:-.6px}
+.medal{position:absolute;border-radius:50%;padding:14px}
+.medalIn{width:100%;height:100%;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+</style></head>
+<body><div id="stage">
+<div id="gym">{{STRIPS}}{{DUST}}<div id="floor"></div></div>
+
+<!-- 1 HOOK -->
+<section class="scene" id="s1">
+  <div class="dm them" id="d1" style="left:60px;top:480px"><div class="av" style="background:#E0548A">P</div><div><div class="who">Priya</div><div class="bub">How much do you bench?</div></div></div>
+  <div class="dm me" id="d2" style="right:60px;top:740px"><div class="av" style="background:#0F7173">M</div><div><div class="who">Marcus</div><div class="bub">Yeah, I bench 225. 💪</div></div></div>
+  <div class="stamp" id="st1"><span class="ico" style="width:130px;height:130px">{{MASK:#8C76FF:130}}</span>LARPING</div>
+</section>
+
+<!-- 2 REALITY -->
+<section class="scene" id="s2">
+  <div class="led" id="led1" style="top:250px;font-size:120px"><span class="ghost">888 888</span>DAY 001</div>
+  <svg id="bench2" class="abs" viewBox="0 0 400 320" style="left:40px;top:560px;width:1000px;height:800px"></svg>
+  <div class="cap" id="c2" style="top:1390px;font-size:84px">He did not bench&nbsp;225.</div>
+</section>
+
+<!-- 3 TREE -->
+<section class="scene" id="s3">
+  <div class="cap" id="c3">Lifts only count<br><em>on video.</em></div>
+  <div class="phone" id="p3" style="left:333px;top:596px">
+    <div class="screen">
+      <div class="island"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="abs" style="left:20px;right:20px;top:66px">
+        <div style="display:flex;align-items:center;gap:10px"><span class="ico" style="width:22px;height:22px">{{chevron-back}}</span><span class="disp" style="font-size:28px;letter-spacing:-.9px">Calisthenics</span></div>
+        <div style="font-size:13.5px;color:var(--muted);margin:4px 0 0 32px">Paladin · Push-ups to front levers, plus bench milestones</div>
+      </div>
+      <div class="abs" style="left:20px;right:20px;top:146px;height:430px;border-radius:24px;background:var(--s2);overflow:hidden">
+        <svg viewBox="0 0 350 430" width="350" height="430" class="abs" style="inset:0">
+          <path d="M80 420 C80 380 80 370 80 345" stroke="#E6E6EE" stroke-width="6" stroke-linecap="round" fill="none"/>
+          <path id="trunk" d="M80 345 C80 300 80 285 80 240 C80 195 80 180 80 120" stroke="#E6E6EE" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <path id="trunkLit" d="M80 420 C80 380 80 370 80 345 C80 300 80 285 80 240 C80 195 80 180 80 120" stroke="#E0548A" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="300" stroke-dashoffset="300"/>
+          <path id="trunkGlow" d="M80 420 C80 380 80 370 80 345 C80 300 80 285 80 240 C80 195 80 180 80 120" stroke="#E0548A" stroke-width="13" opacity=".16" fill="none" stroke-linecap="round" stroke-dasharray="300" stroke-dashoffset="300"/>
+          {{NODES}}
+        </svg>
+        <div class="abs" style="left:0;right:0;bottom:12px;text-align:center;font-weight:600;font-size:13px;color:var(--cal)">Strength</div>
+      </div>
+      <div class="abs" style="left:20px;right:20px;top:592px;border-radius:20px;background:var(--goldSoft);padding:14px 16px">
+        <div style="font-weight:700;font-size:12px;color:var(--gold);letter-spacing:.2px">STANDARD</div>
+        <div style="font-family:Brico;font-weight:700;font-size:18px;letter-spacing:-.4px;margin-top:2px">225 lb bench</div>
+        <div style="font-size:13.5px;color:var(--muted);margin-top:3px;line-height:18px">One clean rep, filmed side-on, pause at the chest.</div>
+      </div>
+      <div class="btnP" id="startBtn"><span class="ico" style="width:16px;height:16px">{{play}}</span>Start session</div>
+      <div class="touch" id="t3" style="left:195px;top:782px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 SLOW-MO -->
+<section class="scene" id="s4">
+  <div class="cap" id="c4">Slow-mo <em>doesn’t lie.</em></div>
+  <div class="phone" id="p4" style="left:333px;top:596px">
+    <div class="screen" style="background:#fff">
+      <div class="island"></div><div class="status" style="color:#fff"><span>9:41</span><span>●●●</span></div>
+      <div class="abs" style="left:0;top:0;width:390px;height:488px;background:#000;overflow:hidden">
+        <svg id="bench4" viewBox="20 0 360 450" preserveAspectRatio="xMidYMid slice" class="abs" style="inset:0;width:100%;height:100%"></svg>
+        <div class="abs" style="top:64px;left:12px;background:rgba(0,0,0,.55);border-radius:999px;padding:5px 10px;color:#fff;font-weight:600;font-size:12px">Slow-mo 0.25×</div>
+        <div id="flareTag" class="abs" style="top:64px;right:12px;background:#E5484D;border-radius:999px;padding:5px 10px;color:#fff;font-weight:600;font-size:12px;opacity:0">Elbows flaring</div>
+        <div class="abs" style="left:0;right:0;bottom:0;padding:18px 12px 10px;background:rgba(0,0,0,.4)">
+          <div style="height:14px;display:flex;align-items:center"><div style="height:2.5px;border-radius:2px;background:rgba(255,255,255,.25);flex:1;position:relative"><div id="scrub" style="position:absolute;left:0;top:0;bottom:0;width:10%;background:#fff;border-radius:2px"></div></div></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+            <div class="ctl" style="min-width:34px;height:28px;border-radius:999px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;color:#fff"><span class="ico" style="width:13px;height:13px">{{play-back}}</span></div>
+            <div style="min-width:34px;height:28px;border-radius:999px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;color:#fff"><span class="ico" style="width:13px;height:13px">{{play-forward}}</span></div>
+            <div style="flex:1"></div>
+            <div style="height:28px;padding:0 10px;border-radius:999px;background:#fff;color:#000;font-weight:600;font-size:12.5px;display:flex;align-items:center">0.25×</div>
+            <div style="height:28px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-weight:600;font-size:12.5px;display:flex;align-items:center">0.5×</div>
+            <div style="height:28px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-weight:600;font-size:12.5px;display:flex;align-items:center">1×</div>
+          </div>
+        </div>
+      </div>
+      <div class="abs" style="left:20px;right:20px;top:506px">
+        <div style="display:flex;align-items:center;gap:10px"><div class="av" style="width:40px;height:40px;font-size:15px;background:#0F7173">M</div>
+          <div><div style="display:flex;gap:6px;align-items:center"><span style="font-weight:600;font-size:15px">You</span><span class="tierpill"><i style="width:6px;height:6px;border-radius:3px;background:#9BA0B1"></i>Day one</span></div><div style="font-size:12.5px;color:var(--muted)">Just now · Bench 95 · set 3</div></div></div>
+        <div style="font-family:Brico;font-weight:700;font-size:18px;line-height:23px;letter-spacing:-.4px;margin-top:14px">Elbows flaring, fixing it.</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--s2)"><span class="ico" style="width:18px;height:18px;color:var(--strong)">{{chatbubble-outline}}</span><span style="font-weight:600;font-size:14px">Ask a mentor for feedback</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 POST IT -->
+<section class="scene" id="s5">
+  <div class="cap" id="c5" style="font-size:84px">Post it. Get kudos from <em>people who’d know.</em></div>
+  <div class="phone" id="p5" style="left:333px;top:660px">
+    <div class="screen">
+      <div class="island"></div><div class="status"><span>9:41</span><span>●●●</span></div>
+      <div class="abs" style="left:16px;right:16px;top:66px;display:flex;align-items:center;gap:10px">{{LOGO:26}}<span class="disp" style="font-size:24px;letter-spacing:-1px">larpr</span></div>
+      <div class="abs" style="left:0;right:0;top:112px">
+        <div style="display:flex;align-items:center;gap:10px;padding:0 16px">
+          <div class="av" style="width:40px;height:40px;font-size:15px;background:#0F7173">M</div>
+          <div style="flex:1"><div style="display:flex;gap:6px;align-items:center"><span style="font-weight:600;font-size:15px">Marcus</span><span class="tierpill"><i style="width:6px;height:6px;border-radius:3px;background:#C77B3A"></i>Apprentice</span></div>
+            <div style="font-size:12.5px;color:var(--muted)">2h · @marcus.benches</div></div>
+        </div>
+        <div style="padding:12px 16px 14px">
+          <div style="font-family:Brico;font-weight:700;font-size:18px;line-height:23px;letter-spacing:-.4px;margin-bottom:12px">Paused at the chest this time. Bar path fixed.</div>
+          <div style="display:flex;gap:18px">
+            <div><div style="font-weight:500;font-size:11.5px;color:var(--muted)">Skill</div><div style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:4px;background:var(--cal)"></i><span class="num" style="font-weight:700;font-size:22px">Calisthenics</span></div></div>
+            <div style="width:1px;background:var(--line)"></div>
+            <div><div style="font-weight:500;font-size:11.5px;color:var(--muted)">Time</div><span class="num" style="font-weight:700;font-size:22px">52m</span></div>
+            <div style="width:1px;background:var(--line)"></div>
+            <div><div style="font-weight:500;font-size:11.5px;color:var(--muted)">Working on</div><span class="num" style="font-weight:700;font-size:22px">Bench 185 lb</span></div>
+          </div>
+        </div>
+        <div style="margin:0 16px;border-radius:20px;overflow:hidden;height:300px;position:relative;background:#000">
+          <svg id="bench5" viewBox="40 30 330 300" preserveAspectRatio="xMidYMid slice" class="abs" style="inset:0;width:100%;height:100%"></svg>
+          <div class="abs" style="left:50%;top:50%;width:56px;height:56px;margin:-28px;border-radius:28px;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff"><span class="ico" style="width:22px;height:22px">{{play}}</span></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px 0">
+          <span class="kudo">Clean technique <span class="c" id="k1">9</span></span>
+          <span class="kudo" id="kSolid"><span class="ico" id="kClap" style="width:13px;height:13px;color:var(--strong);display:none">{{hand-left}}</span><span id="kSolidL">Solid form</span> <span class="c" id="k2">14</span></span>
+          <span class="kudo">I learned something <span class="c">2</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:12px 16px">
+          <span id="sum" style="flex:1;font-size:13px;color:var(--muted)">25 kudos · 4 comments</span>
+          <span class="ico" style="width:21px;height:21px">{{chatbubble-outline}}</span><span class="ico" style="width:21px;height:21px">{{paper-plane-outline}}</span><span class="ico" style="width:21px;height:21px">{{bookmark-outline}}</span>
+        </div>
+      </div>
+      <div class="touch" id="t5" style="left:190px;top:590px"></div>
+    </div>
+  </div>
+  <div class="toast" id="to1" style="top:560px"><div class="av" style="width:64px;height:64px;font-size:24px;background:#C2703D">D</div><div class="t1"><b>@dana.deadlifts</b> gave you <b>Solid form</b></div></div>
+  <div class="toast" id="to2" style="top:560px"><div class="av" style="width:64px;height:64px;font-size:24px;background:#5B3DF5">T</div><div class="t1"><b>@theo.lifts</b>: “bar path is dialled now 🔥”</div></div>
+  <div class="toast" id="to3" style="top:560px"><div class="av" style="width:64px;height:64px;font-size:24px;background:#1F9D74">I</div><div class="t1"><b>@coach.ifeoma</b> gave you <b>Clean technique</b></div></div>
+</section>
+
+<!-- 6 DAY 240 -->
+<section class="scene" id="s6">
+  <div class="led" id="led2" style="top:800px;font-size:170px"><span class="ghost">888 888</span>DAY 240</div>
+</section>
+
+<!-- 7 CLIMB -->
+<section class="scene" id="s7">
+  <div class="cap" id="c7" style="font-size:76px">Somewhere along the way, he <em>stopped faking it.</em></div>
+  <div id="bigPill" class="abs" style="left:50%;top:560px;display:flex;align-items:center;gap:16px;height:96px;padding:0 40px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:48px;letter-spacing:-1px;white-space:nowrap">
+    <i id="bigDot" style="width:24px;height:24px;border-radius:12px;background:#9BA0B1"></i><span class="ico" id="bigVer" style="width:44px;height:44px;color:#FFC53D;display:none">{{shield-checkmark}}</span><span id="bigTier">Larping</span></div>
+  <div class="abs" style="left:150px;right:150px;top:720px;display:flex;flex-direction:column;gap:16px">
+    <div class="row" id="r1"><span class="ico" style="width:42px;height:42px;color:#4ADE80">{{checkmark-circle}}</span>Bench 135 lb<span style="flex:1"></span><span style="font-size:28px;color:#4ADE80">Landed</span></div>
+    <div class="row" id="r2"><span class="ico" style="width:42px;height:42px;color:#4ADE80">{{checkmark-circle}}</span>Bench 185 lb<span style="flex:1"></span><span style="font-size:28px;color:#4ADE80">Landed</span></div>
+    <div class="row" id="r3" style="background:rgba(255,197,61,.14)"><span class="ico" style="width:42px;height:42px;color:#FFC53D">{{checkmark-circle}}</span>Bench 225 lb<span style="flex:1"></span><span style="font-size:28px;color:#FFC53D">Landed</span></div>
+  </div>
+  <div id="glow7" class="abs" style="left:290px;top:1020px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,197,61,.45),rgba(255,197,61,0) 65%);opacity:0"></div>
+  <div class="medal" id="medal7" style="left:370px;top:1100px;width:340px;height:340px;border:4px solid rgba(217,154,0,.6);background:#FFF8E6">
+    <div class="medalIn" style="border:2px solid rgba(217,154,0,.25)"><span class="ico" style="width:82px;height:82px;color:#D99A00">{{shield-checkmark}}</span>
+      <div style="font-family:Brico;font-weight:700;font-size:50px;letter-spacing:-1px;margin-top:6px">Legit</div><div style="font-weight:500;font-size:28px;color:var(--muted)">Calisthenics</div></div></div>
+</section>
+
+<!-- 8 PAYOFF -->
+<section class="scene" id="s8">
+  <div class="dm them" id="d3" style="left:60px;top:330px"><div class="av" style="background:#E0548A">P</div><div><div class="who">Priya</div><div class="bub">How much do you bench?</div></div></div>
+  <div class="dm me" id="d4" style="right:60px;top:600px"><div class="av" style="background:#0F7173">M</div><div><div class="who">Marcus</div><div class="bub">225. Here’s the video.</div>
+    <div id="clip" style="position:relative;margin-top:14px;width:620px;height:700px;border-radius:40px;overflow:hidden;background:#000;border:6px solid var(--primary)">
+      <svg id="bench8" viewBox="20 0 360 400" preserveAspectRatio="xMidYMid slice" class="abs" style="inset:0;width:100%;height:100%"></svg>
+      <div class="abs" style="left:22px;top:22px;display:flex;align-items:center;gap:10px;height:52px;padding:0 20px;border-radius:999px;background:#FCF1D4;color:#B98100;font-weight:700;font-size:26px"><span class="ico" style="width:26px;height:26px">{{shield-checkmark}}</span>Legit</div>
+      <div id="landTag" class="abs" style="left:22px;bottom:22px;display:flex;align-items:center;gap:10px;height:56px;padding:0 22px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-weight:600;font-size:27px;opacity:0"><span class="ico" style="width:28px;height:28px;color:#4ADE80">{{checkmark-circle}}</span>Bench 225 lb · Landed</div>
+    </div></div></div>
+</section>
+
+<!-- 9 END -->
+<section class="scene" id="s9" style="background:#fff">
+  <div id="e1" class="abs" style="left:0;right:0;top:560px;display:flex;justify-content:center"><div style="display:flex;align-items:center;gap:36px">{{LOGO:110}}<span class="disp" style="font-size:104px;letter-spacing:-4px">larpr</span></div></div>
+  <div id="e2" class="abs disp" style="left:60px;right:60px;top:860px;text-align:center;font-size:96px;line-height:1.02;letter-spacing:-3.6px">Fake it till<br>you make it.</div>
+  <div id="e3" class="abs disp" style="left:60px;right:60px;top:1100px;text-align:center;font-size:96px;line-height:1.02;letter-spacing:-3.6px;color:var(--primary)">We’ll track<br>the making.</div>
+  <div id="e4" class="abs" style="left:50%;top:1380px;margin-left:-190px;width:380px;height:96px;border-radius:999px;background:var(--primary);color:#fff;font-weight:600;font-size:36px;display:flex;align-items:center;justify-content:center">Start larping</div>
+</section>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const prog=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=p=>1-Math.pow(1-p,4);
+const eio=p=>p<.5?8*p*p*p*p:1-Math.pow(-2*p+2,4)/2;
+function spring(t){ if(t<=0) return 0; const w0=Math.sqrt(190/.9), z=13/(2*Math.sqrt(190*.9)), wd=w0*Math.sqrt(1-z*z);
+  return 1-Math.exp(-z*w0*t)*(Math.cos(wd*t)+z/Math.sqrt(1-z*z)*Math.sin(wd*t)); }
+function set(el,{o=1,x=0,y=0,s=1,r=0,base=''}={}){ if(typeof el==='string') el=$(el);
+  el.style.opacity=o; el.style.transform=`${base} translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; }
+const SC=[['s1',0,3.5],['s2',3.5,7],['s3',7,10],['s4',10,13],['s5',13,16.5],['s6',16.5,17.5],['s7',17.5,20.5],['s8',20.5,22.5],['s9',22.5,25]];
+const EXIT=.24;
+const exitP=(t,end)=>end>=25?0:eio(prog(t,end-EXIT-.02,end-.02));
+function textIn(ids,lt,ex,step=.1){ ids.forEach((id,i)=>{const p=eo(prog(lt,i*step,i*step+.42)); set(id,{o:p*(1-ex),y:(1-p)*40-ex*30});}); }
+function phoneIn(id,lt,ex){ const p=eo(prog(lt,.05,.6)); set(id,{o:p*(1-ex),y:(1-p)*140-ex*40,s:1.15}); }
+function tap(id,lt,at){ const q=prog(lt,at-.12,at+.25); set(id,{o:q>0&&q<1?Math.sin(q*Math.PI)*.9:0,s:.7+.5*q}); }
+
+/* ---------- bench-press illustration (side-on), viewBox 0 0 400 320 ---------- */
+const SH=[160,186];
+function bench({barY,plates=0,shake=0,spotter=false,flare=0,bg=false,t=0}){
+  const L=62, j=(a)=>shake? (Math.sin(t*57+a)*1.6+Math.sin(t*33+a*2)*1.2)*shake:0;
+  const sh=[SH[0]+j(1)*.4,SH[1]]; const hand=[165+j(2),barY+j(3)];
+  let dx=hand[0]-sh[0], dy=hand[1]-sh[1], d=Math.hypot(dx,dy); d=Math.min(d,2*L-.01);
+  const mx=(sh[0]+hand[0])/2,my=(sh[1]+hand[1])/2, h=Math.sqrt(L*L-(d/2)**2);
+  let px=-dy/d,py=dx/d; if(px<0){px=-px;py=-py;}
+  const el=[mx+px*h,my+py*h];
+  let s='';
+  if(bg) s+=`<defs><radialGradient id="g${bg}" cx="30%" cy="10%" r="90%"><stop offset="0" stop-color="#3a3130"/><stop offset=".6" stop-color="#16171f"/><stop offset="1" stop-color="#0b0c12"/></radialGradient></defs><rect x="-200" y="-200" width="800" height="800" fill="url(#g${bg})"/>
+    <rect x="-40" y="-30" width="200" height="8" rx="4" fill="#EAF2FF" opacity=".9"/><rect x="250" y="-30" width="200" height="8" rx="4" fill="#EAF2FF" opacity=".7"/>
+    <rect x="-200" y="290" width="800" height="300" fill="#121319"/>`;
+  // rack upright
+  s+=`<rect x="196" y="30" width="9" height="262" rx="3" fill="#2E3140"/><rect x="186" y="72" width="22" height="7" rx="3" fill="#3C4052"/>`;
+  s+=`<ellipse cx="210" cy="292" rx="170" ry="10" fill="rgba(0,0,0,.45)"/>`;
+  // bench
+  s+=`<rect x="112" y="208" width="10" height="82" fill="#2B2D3A"/><rect x="292" y="208" width="10" height="82" fill="#2B2D3A"/><rect x="86" y="196" width="238" height="16" rx="7" fill="#33354a"/><rect x="86" y="196" width="238" height="5" rx="3" fill="#4a4d66"/>`;
+  // legs
+  s+=`<path d="M275 188 L332 ${158+j(4)} L346 286" stroke="#1D1F2B" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M332 ${158+j(4)} L346 286" stroke="#C68B59" stroke-width="15" stroke-linecap="round" fill="none" opacity=".0"/><rect x="334" y="280" width="30" height="12" rx="5" fill="#F2F3F8"/>`;
+  // torso + head (+ backwards cap)
+  s+=`<path d="M${sh[0]} ${sh[1]} L275 188" stroke="#3A3F5C" stroke-width="32" stroke-linecap="round"/><path d="M${sh[0]+4} ${sh[1]-8} L270 180" stroke="#C68B59" stroke-width="6" stroke-linecap="round" opacity=".7"/>`;
+  s+=`<circle cx="${127+j(5)*.5}" cy="179" r="18" fill="#C68B59"/><path d="M${109+j(5)*.5} 178 A18 18 0 0 1 ${145+j(5)*.5} 176 Z" fill="#14151C"/><rect x="${96+j(5)*.5}" y="176" width="18" height="6" rx="3" fill="#14151C"/>`;
+  // plates (side-on) drawn before arm
+  const bx=hand[0], by=hand[1];
+  if(plates>0){ s+=`<circle cx="${bx}" cy="${by}" r="58" fill="#1E2029" stroke="#3A3E4F" stroke-width="3"/>`;
+    if(plates>1) s+=`<circle cx="${bx}" cy="${by}" r="49" fill="none" stroke="#2E3140" stroke-width="3"/>`;
+    s+=`<circle cx="${bx}" cy="${by}" r="40" fill="none" stroke="#2A2D3A" stroke-width="2"/><text x="${bx}" y="${by-22}" text-anchor="middle" font-family="Barlow" font-weight="800" font-size="13" fill="#5A5F78">45</text><circle cx="${bx}" cy="${by}" r="14" fill="#9AA0B4"/>`; }
+  // arm
+  s+=`<path d="M${sh[0]} ${sh[1]} L${el[0]} ${el[1]}" stroke="#C68B59" stroke-width="17" stroke-linecap="round"/><path d="M${el[0]} ${el[1]} L${hand[0]} ${hand[1]}" stroke="#B87D4E" stroke-width="14" stroke-linecap="round"/>`;
+  s+=`<circle cx="${bx}" cy="${by}" r="9" fill="#C9CDD8" stroke="#8B90A3" stroke-width="2"/>`;
+  if(flare>0){ s+=`<circle cx="${el[0]}" cy="${el[1]}" r="${22+6*(1-flare)}" fill="none" stroke="#FF5A5F" stroke-width="3.5" stroke-dasharray="6 5" opacity="${flare}"/>`; }
+  if(spotter){ const fx=bx-8, fy=by-14;
+    s+=`<path d="M-30 -40 L${fx-30} ${fy-46}" stroke="#7A4A2E" stroke-width="40" stroke-linecap="round"/><path d="M${fx-30} ${fy-46} L${fx-4} ${fy-6}" stroke="#7A4A2E" stroke-width="22" stroke-linecap="round"/>
+      <path d="M${fx-4} ${fy-6} L${fx+4} ${fy+6}" stroke="#7A4A2E" stroke-width="6" stroke-linecap="round"/><path d="M${fx-10} ${fy-2} L${fx-4} ${fy+9}" stroke="#7A4A2E" stroke-width="6" stroke-linecap="round"/>`; }
+  return s;
+}
+
+function render(t){
+  for(const [id,a,b] of SC) $(id).style.display=(t>=a&&t<b)||(id==='s9'&&t>=25)?'block':'none';
+  // gym background (always, behind)
+  document.querySelectorAll('.dust').forEach((d,i)=>{const sp=.15+((i*37)%10)/40; const y=(+d.dataset.y - t*sp*40)%1920; d.style.transform=`translate(${Math.sin(t*.6+i)*14}px,${(y+1920)%1920-+d.dataset.y}px)`;});
+
+  if(t<3.5){ const ex=exitP(t,3.5);
+    [['d1',0],['d2',1.0]].forEach(([id,st])=>{const p=eo(prog(t,st,st+.38)); const dim=t>=2?1-.4*prog(t,2,2.15):1; set(id,{o:p*dim*(1-ex),y:(1-p)*50-ex*30,s:.94+.06*p});});
+    const sp=t-2, st=$('st1');
+    if(sp<0) st.style.opacity=0; else { const k=spring(sp*1.6); st.style.opacity=clamp(sp/.07)*(1-ex);
+      st.style.transform=`translate(-50%,-50%) translate(0,${330-ex*30}px) rotate(-9deg) scale(${(2.1-1.1*clamp(k,0,1.2))*(1-.04*ex)})`; }
+    const sh=t>=2.06&&t<2.5?Math.exp(-(t-2.06)*12)*Math.sin((t-2.06)*90)*12:0; $('s1').style.transform=`translate(${sh}px,${sh*.6}px)`;
+  }
+  if(t>=3.5&&t<7){ const ex=exitP(t,7), lt=t-3.5;
+    const pl=eo(prog(lt,0,.35)); $('led1').style.opacity=pl*(1-ex); $('led1').style.transform=`translate(-50%,${(1-pl)*-30-ex*30}px)`;
+    const pb=eo(prog(lt,.15,.6)); set('bench2',{o:pb*(1-ex),y:(1-pb)*60-ex*30});
+    const barY=150-38*eio(prog(lt,.5,3.0));
+    $('bench2').innerHTML=bench({barY,plates:0,shake:1,spotter:lt>0.3,t});
+    const pc=eo(prog(lt,.3,.7)); set('c2',{o:pc*(1-ex),y:(1-pc)*40-ex*30});
+  }
+  if(t>=7&&t<10){ const ex=exitP(t,10), lt=t-7;
+    textIn(['c3'],lt,ex); phoneIn('p3',lt,ex);
+    const lit=eio(prog(lt,.4,1.6)); ['trunkLit','trunkGlow'].forEach(id=>$(id).setAttribute('stroke-dashoffset',300*(1-lit)));
+    for(let i=0;i<3;i++){ const q=eo(prog(lt,.5+i*.5,.85+i*.5)); const n=$('n'+i); n.style.opacity=.35+.65*q; const tg=$('tag'+i); set(tg,{o:q,x:(1-q)*-12}); $('ring'+i).setAttribute('stroke-opacity',q); }
+    tap('t3',lt,2.5); set('startBtn',{s:lt>=2.4&&lt<2.65?.975:1});
+  }
+  if(t>=10&&t<13){ const ex=exitP(t,13), lt=t-10;
+    textIn(['c4'],lt,ex); phoneIn('p4',lt,ex);
+    const ph=clamp(lt/2.7); const barY=78+72*Math.sin(Math.PI*Math.min(1,ph*1.15));
+    const fl=eo(prog(lt,1.35,1.6));
+    $('bench4').innerHTML=bench({barY,plates:1,bg:'4',flare:fl,t});
+    $('flareTag').style.opacity=fl; $('scrub').style.width=(8+ph*60)+'%';
+  }
+  if(t>=13&&t<16.5){ const ex=exitP(t,16.5), lt=t-13;
+    textIn(['c5'],lt,ex); phoneIn('p5',lt,ex);
+    $('bench5').innerHTML=bench({barY:150,plates:1,bg:'5',t});
+    const n=Math.min(4,Math.max(0,Math.floor((lt-.5)/.5)+1)); $('k2').textContent=14+n+(lt>=1.0?1:0); $('k1').textContent=9+(lt>=2.5?1:0);
+    $('sum').textContent=(25+n+(lt>=1.0?1:0)+(lt>=2.5?1:0))+' kudos · '+(lt>=1.5?5:4)+' comments';
+    tap('t5',lt,1.0); const on=lt>=1.0; $('kSolid').style.background=on?'var(--soft)':'var(--fill)'; $('kSolid').style.color=on?'var(--strong)':'';
+    $('kClap').style.display=on?'inline-block':'none'; $('k2').style.color=on?'var(--strong)':'';
+    [['to1',.5],['to2',1.5],['to3',2.5]].forEach(([id,a],i)=>{ const q=eo(prog(lt,a,a+.3)); const out=eo(prog(lt,a+.95,a+1.15)); const last=i===2;
+      set(id,{o:q*(last?1-ex:1-out),y:(1-q)*-60+(last?0:-out*40)+(last?-ex*30:0)}); });
+  }
+  if(t>=16.5&&t<17.5){ const ex=exitP(t,17.5), lt=t-16.5;
+    const p=eo(prog(lt,0,.18)); $('led2').style.opacity=p*(1-ex); $('led2').style.transform=`translate(-50%,0) scale(${1.25-.25*p})`;
+  }
+  if(t>=17.5&&t<20.5){ const ex=exitP(t,20.5), lt=t-17.5;
+    textIn(['c7'],lt,ex);
+    const tiers=['Larping','Apprentice','Adept','Legit'], metal=['#9BA0B1','#C77B3A','#8E9AAD','#FFC53D'];
+    const i=Math.min(3,Math.floor(lt/.5)); $('bigTier').textContent=tiers[i]; $('bigDot').style.background=metal[i];
+    $('bigDot').style.display=i===3?'none':'block'; $('bigVer').style.display=i===3?'inline-block':'none';
+    $('bigPill').style.background=i===3?'rgba(255,197,61,.18)':'rgba(255,255,255,.1)'; $('bigPill').style.color=i===3?'#FFC53D':'#fff';
+    const bump=1+.12*Math.exp(-((lt%.5))*14)*(lt<2?1:0); const pp=eo(prog(lt,0,.3));
+    $('bigPill').style.opacity=pp*(1-ex); $('bigPill').style.transform=`translate(-50%,${-ex*30}px) scale(${bump})`;
+    ['r1','r2','r3'].forEach((id,k)=>{const q=eo(prog(lt,.5+k*.5,.85+k*.5)); set(id,{o:q*(1-ex),x:(1-q)*-60,y:-ex*30});});
+    const mk=spring(lt-1.5); const ma=clamp((lt-1.5)/.08);
+    $('medal7').style.opacity=ma*(1-ex); $('medal7').style.transform=`translateY(${-ex*30}px) scale(${1.5-.5*mk}) rotate(${(1-mk)*-12}deg)`;
+    $('glow7').style.opacity=clamp((lt-1.6)/.3)*(.6+.4*Math.sin(Math.max(0,lt-1.6)*4))*(1-ex);
+  }
+  if(t>=20.5&&t<22.5){ const ex=exitP(t,22.5), lt=t-20.5;
+    [['d3',0],['d4',.5]].forEach(([id,st])=>{const p=eo(prog(lt,st,st+.38)); set(id,{o:p*(1-ex),y:(1-p)*50-ex*30,s:.94+.06*p});});
+    // clean paused rep: down 0.6-1.0, pause 1.0-1.2, up 1.2-1.5
+    const dn=eio(prog(lt,.6,1.0)), up=eio(prog(lt,1.2,1.5)); const barY=74+76*dn-76*up;
+    $('bench8').innerHTML=bench({barY,plates:2,bg:'8',t});
+    const lp=eo(prog(lt,1.5,1.75)); set('landTag',{o:lp,y:(1-lp)*20});
+  }
+  if(t>=22.5){ const lt=t-22.5;
+    const a=eo(prog(lt,0,.4)); set('e1',{o:a,y:(1-a)*40,s:.9+.1*spring(lt)});
+    textIn(['e2','e3','e4'],lt-.15,0,.18);
+  }
+}
+window.render=render;
+</script></body></html>
