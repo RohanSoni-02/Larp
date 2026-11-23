@@ -1,0 +1,388 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Brico;font-weight:700;src:url(fonts/BricolageGrotesque_700Bold.ttf)}
+@font-face{font-family:Brico;font-weight:800;src:url(fonts/BricolageGrotesque_800ExtraBold.ttf)}
+@font-face{font-family:Inter;font-weight:400;src:url(fonts/Inter_400Regular.ttf)}
+@font-face{font-family:Inter;font-weight:500;src:url(fonts/Inter_500Medium.ttf)}
+@font-face{font-family:Inter;font-weight:600;src:url(fonts/Inter_600SemiBold.ttf)}
+@font-face{font-family:Inter;font-weight:700;src:url(fonts/Inter_700Bold.ttf)}
+@font-face{font-family:Barlow;font-weight:600;src:url(fonts/BarlowCondensed_600SemiBold.ttf)}
+@font-face{font-family:Barlow;font-weight:700;src:url(fonts/BarlowCondensed_700Bold.ttf)}
+@font-face{font-family:Barlow;font-weight:800;src:url(fonts/BarlowCondensed_800ExtraBold.ttf)}
+:root{--bg:#fff;--s2:#F3F3F7;--s3:#E6E6EE;--ink:#0E0F1C;--muted:#5C5F72;--subtle:#9A9DAE;--line:#ECECF2;--fill:rgba(14,15,28,.06);
+--primary:#5B3DF5;--soft:#EEEAFF;--strong:#4A2DDB;--night:#12132A;--nightMuted:#A9ABC8;--flame:#FF7A1A;--gold:#B98100;--goldSoft:#FCF1D4;--good:#16A34A;--piano:#2F8FDE}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#fff}
+body{font-family:Inter;color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--s2)}
+.abs{position:absolute}
+.ico{display:inline-block;line-height:0;flex:none}
+.ico svg{width:100%;height:100%;fill:currentColor}
+.ico svg .ionicon-fill-none{fill:none}.ico svg .ionicon-stroke-width{stroke-width:32px}
+.disp{font-family:Brico;font-weight:800}
+.num{font-family:Barlow;font-weight:800;font-variant-numeric:tabular-nums}
+/* hook + end */
+.layer{position:absolute;inset:0;display:none;background:#fff}
+.bubble{position:absolute;left:50%;top:330px;white-space:nowrap;background:var(--s2);border-radius:999px;padding:30px 60px 36px;font-family:Brico;font-weight:700;font-size:96px;letter-spacing:-3px;line-height:1}
+.stamp{position:absolute;left:50%;top:50%;display:flex;align-items:center;gap:30px;padding:16px 64px 26px 50px;border:15px solid var(--primary);border-radius:42px;color:var(--primary);
+  font-family:Brico;font-weight:800;font-size:190px;letter-spacing:-6px;line-height:1;background:rgba(255,255,255,.88)}
+/* left column */
+#col{position:absolute;left:150px;top:0;width:900px;height:1080px;display:none}
+.cap{position:absolute;left:0;top:330px;width:900px}
+.eyebrow{display:flex;align-items:center;gap:14px;font-weight:700;font-size:30px;letter-spacing:-.3px;margin-bottom:28px}
+.day{display:inline-flex;align-items:center;height:48px;padding:0 20px;border-radius:999px;background:var(--ink);color:#fff;font-family:Barlow;font-weight:700;font-size:32px;letter-spacing:.5px}
+.h{font-family:Brico;font-weight:800;font-size:118px;line-height:.98;letter-spacing:-4.4px}
+#rail{position:absolute;left:0;top:880px;display:flex;gap:10px;align-items:center}
+#rail i{display:block;width:46px;height:8px;border-radius:4px;background:#DADAE4}
+#railLabel{position:absolute;left:0;top:910px;font-weight:600;font-size:22px;color:var(--subtle)}
+/* phone */
+.phone{position:absolute;left:1240px;top:106px;width:414px;height:868px;border-radius:66px;background:#0E0F1C;padding:12px;
+  box-shadow:0 40px 80px rgba(27,31,59,.22),0 10px 24px rgba(27,31,59,.12),inset 0 0 0 2px #2a2c3c;display:none}
+.screen{position:relative;width:390px;height:844px;border-radius:54px;overflow:hidden;background:#fff}
+.island{position:absolute;left:50%;top:22px;width:118px;height:34px;margin-left:-59px;border-radius:20px;background:#000;z-index:50}
+.status{position:absolute;left:0;right:0;top:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 46px;font-weight:600;font-size:16px;z-index:45}
+.scr{position:absolute;inset:0;display:none;background:#fff}
+.pad{position:absolute;left:20px;right:20px}
+.title{font-family:Brico;font-weight:800;font-size:30px;letter-spacing:-1px;line-height:34px}
+.sub{font-size:13.5px;line-height:19px;color:var(--muted)}
+.btn{height:56px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:16px;background:var(--primary);color:#fff}
+.btn.sm{height:36px;font-size:14px;padding:0 16px;display:inline-flex}
+.btn.sec{background:var(--fill);color:var(--ink)}
+.card{border-radius:20px;background:var(--s2);padding:14px 16px}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:0 8px;height:22px;background:var(--s2);font-weight:600;font-size:11.5px}
+.tag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-weight:600;font-size:11.5px}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;flex:none}
+.tabs{display:flex;gap:20px;padding:0 20px;border-bottom:1px solid var(--line);font-weight:600;font-size:14.5px;color:var(--muted);white-space:nowrap}
+.tabs span{padding:10px 0 12px}
+.tabs .on{color:var(--ink);box-shadow:inset 0 -2.5px 0 var(--ink)}
+.kudo{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:13px}
+.kudo .c{color:var(--muted)}
+.touch{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(14,15,28,.18);border:2px solid rgba(255,255,255,.8);z-index:60;opacity:0}
+.lrow{display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;border-radius:16px}
+</style></head>
+<body><div id="stage">
+
+<!-- HOOK -->
+<div class="layer" id="hook">
+  <div class="bubble" id="hb">I play piano. 🎹</div>
+  <div class="stamp" id="hs"><span class="ico" style="width:170px;height:170px">{{MASK:#5B3DF5:170}}</span>LARPING</div>
+  <div class="abs disp" id="ht" style="left:0;right:0;top:640px;text-align:center;font-size:140px;letter-spacing:-5.4px;line-height:1">Fake it till you make it.</div>
+</div>
+
+<!-- LEFT COLUMN -->
+<div id="col">
+  <div class="cap" id="cap"><div class="eyebrow"><span class="day" id="day">DAY 1</span><span id="feat" style="color:var(--strong)">Sessions</span></div><div class="h" id="head">Log every session.</div></div>
+  <div id="rail">{{RAIL}}</div>
+</div>
+
+<!-- PHONE -->
+<div class="phone" id="phone"><div class="screen">
+  <div class="island"></div><div class="status" id="status"><span>9:41</span><span>●●●</span></div>
+
+  <!-- 1 focus -->
+  <div class="scr" id="sc1" style="background:#0B0C16;color:#fff">
+    <div class="abs" style="left:24px;top:66px;width:40px;height:40px;border-radius:20px;background:#ffffff14;display:flex;align-items:center;justify-content:center"><span class="ico" style="width:18px;height:18px">{{chevron-down}}</span></div>
+    <div class="abs" style="left:0;right:0;top:76px;text-align:center;color:#ffffff99;font-weight:600;font-size:14.5px">Piano · Daily scales</div>
+    <div class="abs" style="left:35px;top:180px;width:320px;height:320px">
+      <svg width="320" height="320" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="160" cy="160" r="156" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="8"/>
+        <circle id="ring" cx="160" cy="160" r="156" fill="none" stroke="#8C76FF" stroke-width="8" stroke-linecap="round" stroke-dasharray="980.18" stroke-dashoffset="400"/></svg>
+      <div class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div style="color:#8C76FF;font-family:Brico;font-weight:700;font-size:18px;letter-spacing:-.3px">C major scale</div>
+        <div id="clock" class="num" style="font-size:96px;line-height:98px;margin-top:2px">06:12</div>
+        <div id="total" style="color:#ffffff99;font-size:14px;margin-top:6px">Total 8:48</div>
+      </div>
+    </div>
+    <div class="abs" style="left:0;right:0;top:536px;text-align:center;color:#ffffffcc;font-weight:600;font-size:15px">Up next: Arpeggios · 10 min</div>
+    <div class="abs btn" style="left:24px;right:24px;bottom:156px;height:60px;background:#8C76FF"><span class="ico" style="width:18px;height:18px">{{pause}}</span>Pause</div>
+    <div class="abs btn" style="left:24px;right:24px;bottom:94px;height:52px;background:#ffffff14;font-size:15px">Finish and save</div>
+    <div class="abs" style="left:30px;right:30px;bottom:36px;text-align:center;color:#ffffff73;font-size:12.5px;line-height:18px">Turn on Do Not Disturb. We’ll still buzz you at the end of each block.</div>
+  </div>
+
+  <!-- 2 tree -->
+  <div class="scr" id="sc2">
+    <div class="pad" style="top:66px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="title">Piano</span><span class="pill" id="treePill"><i style="width:6px;height:6px;border-radius:3px;background:#9BA0B1"></i>Day one</span></div>
+      <div class="sub" style="margin-top:3px">Bard · Scales, reading and chords</div></div>
+    <div class="abs" style="left:14px;right:14px;top:132px;height:560px;border-radius:24px;background:var(--s2);overflow:hidden">
+      <svg id="tree" viewBox="0 70 400 470" width="362" height="560" style="position:absolute;inset:0"></svg>
+    </div>
+    <div class="pad" style="top:708px;display:flex;gap:10px">
+      <div class="card" style="flex:1;padding:10px 14px"><div style="font-size:11.5px;color:var(--muted);font-weight:500">Nodes landed</div><div class="num" id="landed" style="font-size:26px;font-weight:700">0 / 9</div></div>
+      <div class="card" style="flex:1;padding:10px 14px"><div style="font-size:11.5px;color:var(--muted);font-weight:500">Practice</div><div class="num" style="font-size:26px;font-weight:700">6h 40m</div></div>
+    </div>
+  </div>
+
+  <!-- 3 larp check -->
+  <div class="scr" id="sc3">
+    <div class="pad" style="top:64px;height:40px;display:flex;align-items:center;justify-content:space-between">
+      <div style="width:36px;height:36px;border-radius:18px;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:20px">✕</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:0 12px;height:32px;background:var(--night);color:#fff;font-family:Barlow;font-weight:700;font-size:18px"><i id="lcDot" style="width:7px;height:7px;border-radius:50%;background:#FF3B30"></i><span id="lcTime">1:41</span></div></div>
+    <div class="pad" style="top:118px">
+      <div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:13px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff"><span class="ico" style="width:20px;height:20px">{{flash}}</span></div><div class="title" style="font-size:32px">Larp Check</div></div>
+      <div style="font-size:15.5px;line-height:22px;color:var(--muted);margin-top:10px">Two minutes. Show the work and your face. No filters, no do-overs.</div>
+      <div style="position:relative;margin-top:20px;border-radius:28px;width:350px;height:440px;overflow:hidden;background:var(--s2)">
+        <div id="lcEmpty" class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:60px;height:60px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><span class="ico" style="width:26px;height:26px">{{image}}</span></div><div style="font-family:Brico;font-weight:700;font-size:18px">The work</div><div style="font-size:13.5px;color:var(--muted)">Tap to add a photo</div></div>
+        <div id="lcPhoto" class="abs" style="inset:0;opacity:0">{{ART:lc-piano:#2F8FDE}}{{KEYS}}</div>
+        <div class="abs" style="top:12px;left:12px;width:96px;height:128px;border-radius:18px;border:3px solid #fff;overflow:hidden;background:var(--s3);display:flex;align-items:center;justify-content:center">
+          <div id="selfieEmpty" style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="ico" style="width:22px;height:22px">{{camera}}</span><div style="font-weight:600;font-size:12px">Selfie</div></div>
+          <svg id="selfieImg" viewBox="0 0 96 128" class="abs" style="inset:0;width:100%;height:100%;opacity:0"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6DEF0"/><stop offset="1" stop-color="#7C8DB3"/></linearGradient></defs><rect width="96" height="128" fill="url(#sg)"/>
+            <circle cx="48" cy="56" r="21" fill="#E8B48C"/><path d="M26 56 Q26 30 48 29 Q71 30 70 56 Q66 42 48 41 Q31 42 26 56Z" fill="#2B1D16"/><path d="M10 128 Q14 90 48 88 Q82 90 86 128Z" fill="#2F8FDE"/></svg></div>
+      </div></div>
+    <div class="abs btn" id="lcBtn" style="left:20px;right:20px;bottom:34px">Post Larp Check · +10 XP</div>
+    <div class="touch" id="t3a" style="left:230px;top:450px"></div><div class="touch" id="t3b" style="left:80px;top:330px"></div><div class="touch" id="t3c" style="left:195px;top:782px"></div>
+  </div>
+
+  <!-- 4 feed -->
+  <div class="scr" id="sc4">
+    <div class="pad" style="top:62px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px">{{LOGO:26}}<span class="disp" style="font-size:24px;letter-spacing:-1px">larpr</span></div><span class="ico" style="width:22px;height:22px">{{notifications-outline}}</span></div>
+    <div class="abs" style="left:16px;top:106px;display:flex;gap:12px">{{STORIES}}</div>
+    <div class="abs tabs" style="left:0;right:0;top:186px"><span class="on">Following</span><span>For You</span></div>
+    <div class="abs" style="left:0;right:0;top:232px">
+      <div style="display:flex;align-items:center;gap:10px;padding:0 16px"><div class="av" style="width:40px;height:40px;font-size:15px;background:#0F7173">S</div>
+        <div style="flex:1"><div style="display:flex;gap:6px;align-items:center"><span style="font-weight:600;font-size:15px">Sam</span><span class="pill"><i style="width:6px;height:6px;border-radius:3px;background:#C77B3A"></i>Apprentice</span></div><div style="font-size:12.5px;color:var(--muted)">12m · @sam.plays.keys</div></div>
+        <span class="tag" style="background:var(--soft);color:var(--strong)"><span class="ico" style="width:12px;height:12px">{{flash}}</span>Larp Check</span></div>
+      <div style="padding:12px 16px 12px">
+        <div style="font-family:Brico;font-weight:700;font-size:18px;line-height:23px;letter-spacing:-.4px;margin-bottom:10px">C major run, finally smooth.</div>
+        <div style="display:flex;gap:18px">
+          <div><div style="font-weight:500;font-size:11.5px;color:var(--muted)">Skill</div><div style="display:flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:4px;background:var(--piano)"></i><span class="num" style="font-weight:700;font-size:22px">Piano</span></div></div>
+          <div style="width:1px;background:var(--line)"></div><div><div style="font-weight:500;font-size:11.5px;color:var(--muted)">Time</div><span class="num" style="font-weight:700;font-size:22px">45m</span></div>
+          <div style="width:1px;background:var(--line)"></div><div><div style="font-weight:500;font-size:11.5px;color:var(--muted)">Landed</div><span class="num" style="font-weight:700;font-size:22px">C major scale</span></div></div></div>
+      <div style="margin:0 16px;border-radius:20px;overflow:hidden;height:250px;position:relative">{{ART:feed-piano:#2F8FDE}}{{KEYS}}
+        <div class="abs" style="top:10px;left:10px;width:66px;height:88px;border-radius:12px;border:2px solid #111427;overflow:hidden"><svg viewBox="0 0 96 128" width="62" height="84"><rect width="96" height="128" fill="#9fb1d6"/><circle cx="48" cy="56" r="21" fill="#E8B48C"/><path d="M26 56 Q26 30 48 29 Q71 30 70 56 Q66 42 48 41 Q31 42 26 56Z" fill="#2B1D16"/><path d="M10 128 Q14 90 48 88 Q82 90 86 128Z" fill="#2F8FDE"/></svg></div>
+        <div id="burst" class="abs" style="left:50%;top:50%;margin:-26px 0 0 -96px;width:192px;height:52px;border-radius:999px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:15px;opacity:0"><span class="ico" style="width:22px;height:22px">{{hand-left}}</span>Great timing</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px 0">
+        <span class="kudo">Clean technique <span class="c" id="k1">6</span></span>
+        <span class="kudo" id="kGT"><span id="kGTi" class="ico" style="width:13px;height:13px;display:none">{{hand-left}}</span>Great timing <span class="c" id="k2">8</span></span>
+        <span class="kudo">I learned something <span class="c">2</span></span></div>
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 16px"><span id="sum" style="flex:1;font-size:13px;color:var(--muted)">16 kudos · 3 comments</span><span class="ico" style="width:21px;height:21px">{{chatbubble-outline}}</span><span class="ico" style="width:21px;height:21px">{{share-outline}}</span><span class="ico" style="width:21px;height:21px">{{bookmark-outline}}</span></div>
+    </div>
+  </div>
+
+  <!-- 5 mentor -->
+  <div class="scr" id="sc5">
+    <div class="pad" style="top:66px"><span class="ico" style="width:22px;height:22px">{{chevron-back}}</span>
+      <div class="title" style="margin-top:10px">Ask a mentor</div>
+      <div class="sub" style="margin-top:6px">Mentors are Adept or Legit larpers who opted in to give feedback.</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:18px;padding:12px 14px;border-radius:18px;border:1.5px solid var(--primary);background:var(--soft)">
+        <div class="av" style="width:44px;height:44px;font-size:17px;background:#C2703D">K</div>
+        <div style="flex:1"><div style="display:flex;gap:6px;align-items:center"><span style="font-weight:600;font-size:15px">Kai</span><span class="pill" style="background:var(--goldSoft);color:var(--gold)"><span class="ico" style="width:11px;height:11px">{{shield-checkmark}}</span>Legit</span></div><div style="font-size:12.5px;color:var(--muted)">Piano · 1,240 h practised</div></div>
+        <span class="ico" style="width:22px;height:22px;color:var(--primary)">{{checkmark-circle}}</span></div>
+      <div style="font-weight:500;font-size:12.5px;color:var(--muted);margin-top:20px">Your question</div>
+      <div style="margin-top:8px;display:flex;justify-content:flex-end"><div id="q" style="max-width:290px;background:var(--primary);color:#fff;border-radius:20px 20px 6px 20px;padding:12px 15px;font-size:15px;line-height:20px">Is my wrist too stiff on the C major run?</div></div>
+      <div id="qclip" style="margin:8px 0 0 auto;width:170px;height:110px;border-radius:16px;overflow:hidden;position:relative">{{ART:mentor-clip:#2F8FDE}}<div class="abs" style="left:50%;top:50%;width:36px;height:36px;margin:-18px;border-radius:18px;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center"><span class="ico" style="width:15px;height:15px">{{play}}</span></div></div>
+      <div id="typing" style="margin-top:12px;display:inline-flex;gap:5px;padding:14px 16px;border-radius:20px 20px 20px 6px;background:var(--s2)"><i class="dt" style="width:7px;height:7px;border-radius:4px;background:var(--subtle)"></i><i class="dt" style="width:7px;height:7px;border-radius:4px;background:var(--subtle)"></i><i class="dt" style="width:7px;height:7px;border-radius:4px;background:var(--subtle)"></i></div>
+      <div id="ans" style="margin-top:12px;max-width:300px;background:var(--s2);border-radius:20px 20px 20px 6px;padding:12px 15px;font-size:15px;line-height:20px;opacity:0">A little. Let the wrist float and pass the thumb under earlier. Film from the side next time.</div>
+    </div>
+  </div>
+
+  <!-- 6 quests (arena) -->
+  <div class="scr" id="sc6">{{ARENA_HEAD:Quests}}
+    <div class="pad" style="top:176px">
+      <div class="card" style="padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="tag" style="background:rgba(47,143,222,.14);color:#1F6FB5"><i style="width:7px;height:7px;border-radius:4px;background:var(--piano)"></i>Piano</span><span style="font-size:12.5px;color:var(--muted)">Ends Sunday</span></div>
+        <div style="font-family:Brico;font-weight:700;font-size:21px;letter-spacing:-.5px;margin-top:12px">Learn a song in 7 days</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:4px">Pick any song and practise it on 5 days.</div>
+        <div style="display:flex;gap:6px;margin-top:16px">{{QDOTS}}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px"><span id="qprog" style="font-weight:600;font-size:13.5px">3 of 5 days</span><span class="btn sm" id="qbtn" style="background:var(--soft);color:var(--strong)"><span class="ico" style="width:14px;height:14px">{{checkmark}}</span>Joined</span></div>
+      </div>
+      <div class="card" style="padding:16px;margin-top:12px;background:#fff;border:1px solid var(--line)">
+        <div style="display:flex;align-items:center;justify-content:space-between"><span class="tag" style="background:var(--fill);color:var(--muted)">Any skill</span><span style="font-size:12.5px;color:var(--muted)">Ends Sunday</span></div>
+        <div style="font-family:Brico;font-weight:700;font-size:19px;letter-spacing:-.4px;margin-top:10px">Show up 4 days</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:3px">Any skill, any length. Log 4 days this week.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px"><span style="font-size:13px;color:var(--muted)">2,431 in</span><span class="btn sm">Join quest</span></div>
+      </div>
+    </div>
+    <div id="qdone" class="abs" style="left:20px;right:20px;bottom:30px;height:54px;border-radius:18px;background:var(--night);color:#fff;display:flex;align-items:center;gap:10px;padding:0 16px;font-weight:600;font-size:14.5px;opacity:0"><span class="ico" style="width:20px;height:20px;color:#FFC53D">{{trophy}}</span>Quest complete · +40 XP</div>
+  </div>
+
+  <!-- 7 rankings -->
+  <div class="scr" id="sc7">{{ARENA_HEAD:Rankings}}
+    <div class="pad" style="top:172px;display:flex;align-items:center;justify-content:space-between"><span style="font-family:Brico;font-weight:700;font-size:19px;letter-spacing:-.4px">Piano leaderboard</span>
+      <span style="display:flex;gap:4px"><span class="tag" style="background:var(--ink);color:#fff">7d</span><span class="tag" style="background:var(--fill)">30d</span><span class="tag" style="background:var(--fill)">90d</span></span></div>
+    <div class="abs" style="left:20px;right:20px;top:214px;height:230px">{{PODIUM}}</div>
+    <div class="abs" style="left:20px;right:20px;top:456px;height:300px;overflow:hidden">
+      <div id="lb" style="position:relative;height:300px">{{LBROWS}}</div></div>
+    <div class="abs" style="left:0;right:0;bottom:30px;text-align:center;font-size:12.5px;color:var(--subtle)">Ranked by verified practice minutes.</div>
+  </div>
+
+  <!-- 8 guilds & rooms -->
+  <div class="scr" id="sc8">{{ARENA_HEAD:Guilds}}
+    <div class="pad" style="top:174px">
+      <div style="font-family:Brico;font-weight:700;font-size:17px;letter-spacing:-.3px;margin-bottom:10px;display:flex;align-items:center;gap:8px"><i id="liveDot" style="width:8px;height:8px;border-radius:4px;background:#FF3B30"></i>Live now</div>
+      <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 14px">
+        <div style="width:46px;height:46px;border-radius:14px;background:var(--night);color:#fff;display:flex;align-items:center;justify-content:center"><span class="ico" style="width:22px;height:22px">{{radio}}</span></div>
+        <div style="flex:1"><div style="font-weight:600;font-size:15px">Quiet scales room</div><div style="font-size:12.5px;color:var(--muted)">Piano · <span id="roomN">6</span> practising · 23 min</div></div>
+        <span class="btn sm sec" style="padding:0 12px;font-size:13px">Join quietly</span></div>
+      <div style="font-family:Brico;font-weight:700;font-size:17px;letter-spacing:-.3px;margin:22px 0 10px">Upcoming meetups</div>
+      <div style="border-radius:22px;overflow:hidden;border:1px solid var(--line)">
+        <div style="height:120px;position:relative">{{ART:guild-piano:#2F8FDE}}<div class="abs" style="left:14px;bottom:12px;display:flex;align-items:center;gap:8px;color:#fff;font-weight:600;font-size:13px;background:rgba(0,0,0,.3);border-radius:999px;padding:5px 10px"><span class="ico" style="width:14px;height:14px">{{calendar}}</span>Thu · 7:00 pm</div></div>
+        <div style="padding:14px 16px">
+          <div style="font-family:Brico;font-weight:700;font-size:19px;letter-spacing:-.4px">Adult Beginners Piano Night</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:4px"><span class="ico" style="width:14px;height:14px">{{location}}</span>Harbourfront community centre · Toronto</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+            <div style="display:flex;align-items:center"><div style="display:flex">{{GOERS}}</div><span id="going" style="font-size:13px;color:var(--muted);margin-left:8px">11 going</span></div>
+            <span class="btn sm" id="gbtn">I’m going</span></div>
+        </div></div>
+    </div>
+    <div class="touch" id="t8" style="left:318px;top:604px"></div>
+  </div>
+
+  <!-- 9 share card / tiers -->
+  <div class="scr" id="sc9" style="background:var(--s2)">
+    <div class="pad" style="top:66px"><div class="title">Share your card</div></div>
+    <div class="abs" style="left:20px;right:20px;top:124px;height:540px;border-radius:30px;background:var(--night);color:#fff;padding:24px;overflow:hidden">
+      <div class="abs" style="right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(122,97,255,.45),transparent 70%)"></div>
+      <div style="display:flex;align-items:center;gap:12px"><div class="av" style="width:54px;height:54px;font-size:20px;background:#0F7173">S</div>
+        <div style="flex:1"><div style="font-family:Brico;font-weight:700;font-size:22px;letter-spacing:-.5px">Sam</div><div style="font-size:13px;color:var(--nightMuted)">@sam.plays.keys</div></div>
+        <div style="text-align:center"><div class="num" id="lvl" style="font-size:40px;line-height:40px">12</div><div style="font-size:10.5px;font-weight:600;color:var(--nightMuted);letter-spacing:1px">LEVEL</div></div></div>
+      <div style="margin-top:22px;padding:16px;border-radius:20px;background:rgba(255,255,255,.07)">
+        <div style="display:flex;align-items:center;gap:10px"><i style="width:10px;height:10px;border-radius:5px;background:var(--piano)"></i><span style="font-weight:600;font-size:16px;flex:1">Piano</span><span class="num" id="hrs" style="font-size:22px;font-weight:700">160h</span></div>
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between">
+          <span id="tierP" style="display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:rgba(255,255,255,.12);font-weight:600;font-size:14px"><i id="tierDot" style="width:8px;height:8px;border-radius:4px;background:#9BA0B1"></i><span class="ico" id="tierV" style="width:14px;height:14px;color:#FFC53D;display:none">{{shield-checkmark}}</span><span id="tierN">Larping</span></span>
+          <span class="num" id="nodesC" style="font-size:18px;font-weight:600;color:var(--nightMuted)">9 / 9 nodes</span></div>
+      </div>
+      <div id="glow9" class="abs" style="left:85px;top:250px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,197,61,.5),rgba(255,197,61,0) 65%);opacity:0"></div>
+      <div id="stamp9" class="abs" style="left:120px;top:286px;width:150px;height:150px;border-radius:50%;border:2.5px solid rgba(217,154,0,.6);background:#FFF8E6;padding:7px;opacity:0">
+        <div style="width:100%;height:100%;border-radius:50%;border:1.5px solid rgba(217,154,0,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink)"><span class="ico" style="width:36px;height:36px;color:#D99A00">{{shield-checkmark}}</span><div style="font-family:Brico;font-weight:700;font-size:22px;letter-spacing:-.4px">Legit</div><div style="font-size:12px;color:var(--muted);font-weight:500">Piano</div></div></div>
+      <div class="abs" style="left:24px;bottom:20px;font-size:12.5px;font-weight:500;color:var(--nightMuted)">larpr · get good at things, together</div>
+    </div>
+    <div class="abs btn" style="left:20px;right:20px;bottom:34px"><span class="ico" style="width:18px;height:18px">{{share-outline}}</span>Share</div>
+  </div>
+</div></div>
+
+<!-- END -->
+<div class="layer" id="end">
+  <div id="e1" class="abs" style="left:0;right:0;top:250px;display:flex;justify-content:center"><div style="display:flex;align-items:center;gap:30px">{{LOGO:96}}<span class="disp" style="font-size:90px;letter-spacing:-3.6px">larpr</span></div></div>
+  <div id="e2" class="abs disp" style="left:0;right:0;top:460px;text-align:center;font-size:136px;letter-spacing:-5.2px;line-height:1">Fake it till you make it.</div>
+  <div id="e3" class="abs disp" style="left:0;right:0;top:620px;text-align:center;font-size:136px;letter-spacing:-5.2px;line-height:1;color:var(--primary)">We’ll track the making.</div>
+  <div id="e4" class="abs" style="left:0;right:0;top:850px;display:flex;justify-content:center;gap:14px;font-weight:600;font-size:30px;color:var(--muted)">Sessions · Skill trees · Larp Checks · Mentors · Quests · Guilds</div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const prog=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=p=>1-Math.pow(1-p,4);
+const eio=p=>p<.5?8*p*p*p*p:1-Math.pow(-2*p+2,4)/2;
+function spring(t){ if(t<=0) return 0; const w0=Math.sqrt(190/.9), z=13/(2*Math.sqrt(190*.9)), wd=w0*Math.sqrt(1-z*z);
+  return 1-Math.exp(-z*w0*t)*(Math.cos(wd*t)+z/Math.sqrt(1-z*z)*Math.sin(wd*t)); }
+function set(el,{o=1,x=0,y=0,s=1,r=0}={}){ if(typeof el==='string') el=$(el); el.style.opacity=o; el.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`; }
+const pad=n=>String(n).padStart(2,'0');
+function tap(id,lt,at){ const q=prog(lt,at-.12,at+.25); set(id,{o:q>0&&q<1?Math.sin(q*Math.PI)*.9:0,s:.7+.5*q}); }
+
+const FEAT=[ // start, day, name, heading, eyebrow colour
+ [4.0,'DAY 1','Sessions','Log every<br>session.','#4A2DDB'],
+ [6.5,'DAY 12','Skill trees','Grow your<br>skill tree.','#1F6FB5'],
+ [9.0,'DAY 19','Larp Check','Prove it,<br>on the spot.','#4A2DDB'],
+ [11.5,'DAY 19','Feed','Post it.<br>Earn kudos.','#C23B70'],
+ [14.0,'DAY 26','Mentors','Ask someone who’s been there.','#C2703D'],
+ [16.5,'DAY 33','Side quests','Take on<br>side quests.','#B98100'],
+ [19.0,'DAY 60','Rankings','Climb the<br>leaderboard.','#0F7173'],
+ [21.5,'DAY 90','Guilds &amp; rooms','Find your<br>people, IRL.','#16A34A'],
+ [24.0,'DAY 240','Tiers','From Larping<br>to Legit.','#B98100']];
+const F_END=26.5, SW=.22;
+
+/* ---- piano tree (port of TreeSvg layout) ---- */
+const POS=[[[132,418],[92,330],[64,240],[48,148]],[[200,400],[212,306],[190,212],[200,118]],[[268,418],[308,330],[336,240],[352,148]]];
+const pts=s=>{const P=POS[s];return [P[0],[(P[1][0]+P[2][0])/2,(P[1][1]+P[2][1])/2],P[3]];};
+const seg=(a,b)=>`M${a[0]} ${a[1]} C${a[0]} ${a[1]-45} ${b[0]} ${b[1]+45} ${b[0]} ${b[1]}`;
+const BR=[['Technique','#5B3DF5',['C major scale','All major scales','Arpeggios']],['Reading','#0EA5E9',['Treble clef','Both clefs','Sight-reading']],['Chords','#F97316',['Triads','Inversions','Improvisation']]];
+// landing order on the beat: [branch,node,time]
+const LAND=[[0,0,.25],[1,0,.75],[0,1,1.25],[2,0,1.75]];
+function tree(lt){
+  let s='', g='', n='', landed=0; const ROOT=[200,470];
+  const state=(b,i)=>{ for(const [bb,ii,at] of LAND) if(bb===b&&ii===i) return lt>=at?['lit',clamp((lt-at)/.25)]:['next',0];
+    return 'dim'; };
+  BR.forEach(([name,col,nodes],b)=>{ const P=pts(b);
+    const chain=[ROOT,...P];
+    for(let i=0;i<3;i++){ const st=state(b,i); const d=seg(chain[i],chain[i+1]);
+      if(st[0]==='lit'){ const p=st[1]; g+=`<path d="${d}" stroke="${col}" stroke-width="11" fill="none" opacity="${.16*p}" stroke-linecap="round"/><path d="${d}" stroke="${col}" stroke-width="4.5" fill="none" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-p}"/>`; }
+      s+=`<path d="${d}" stroke="#E6E6EE" stroke-width="3" fill="none" stroke-linecap="round"/>`; }
+    nodes.forEach((label,i)=>{ const [x,y]=P[i]; const st=state(b,i); const r=i===2?25:19;
+      if(st[0]==='lit'){ landed++; const k=.6+.4*spring(st[1]*.6); n+=`<g transform="translate(${x} ${y}) scale(${k})"><circle r="${r+9}" fill="${col}" opacity=".18"/><circle r="${r}" fill="${col}"/><path d="M-7 0.5 L-2 5.5 L7.5 -4.5" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`; }
+      else if(st[0]==='next'){ n+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${col}" stroke-width="2.5" stroke-dasharray="5 6"/><circle cx="${x}" cy="${y}" r="5" fill="${col}"/>`; }
+      else { n+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="#E6E6EE" stroke-width="2.5"/><rect x="${x-5}" y="${y-2}" width="10" height="8" rx="2" fill="#9A9DAE"/><path d="M${x-3} ${y-2} v-3 a3 3 0 0 1 6 0 v3" stroke="#9A9DAE" stroke-width="1.8" fill="none"/>`; }
+      const lit=st[0]==='lit'; const words=label.split(' '); const lines=label.length>12&&words.length>1?[words.slice(0,-1).join(' '),words.at(-1)]:[label];
+      lines.forEach((ln,k)=>{ n+=`<text x="${x}" y="${y+r+16+k*14}" text-anchor="middle" font-family="Inter" font-weight="600" font-size="12" fill="${lit?'#0E0F1C':'#9A9DAE'}">${ln}</text>`; });
+    });
+    n+=`<text x="${[70,200,330][b]}" y="${518}" text-anchor="middle" font-family="Inter" font-weight="600" font-size="13" fill="${col}">${name}</text>`;
+  });
+  s+=`<circle cx="200" cy="470" r="9" fill="#C9CBD8"/>`;
+  return [s+g+n,landed];
+}
+
+function render(t){
+  // hook
+  $('hook').style.display=t<4?'block':'none';
+  if(t<4){ const ex=eio(prog(t,3.72,3.98));
+    const pb=eo(prog(t,0,.38)); const up=eio(prog(t,2,2.45));
+    $('hb').style.opacity=pb*(1-ex); $('hb').style.transform=`translate(-50%,${(1-pb)*40-up*200-ex*30}px) scale(${(.92+.08*pb)*(1-.25*up)})`;
+    const sp=t-1, st=$('hs'); if(sp<0) st.style.opacity=0; else { const k=spring(sp*1.6);
+      st.style.opacity=clamp(sp/.07)*(1-ex); st.style.transform=`translate(-50%,-50%) translate(0,${20-up*180-ex*30}px) rotate(-8deg) scale(${(2.1-1.1*clamp(k,0,1.2))*(1-.35*up)})`; }
+    const pt=eo(prog(t,2.1,2.55)); set('ht',{o:pt*(1-ex),y:(1-pt)*50+140*(1)-140-ex*30});
+    const sh=t>=1.06&&t<1.5?Math.exp(-(t-1.06)*12)*Math.sin((t-1.06)*90)*10:0; $('hook').style.transform=`translate(${sh}px,${sh*.6}px)`;
+  }
+  // features
+  const inF=t>=4&&t<F_END; $('col').style.display=inF?'block':'none'; $('phone').style.display=inF?'block':'none';
+  if(inF){
+    let i=FEAT.length-1; while(i>0&&t<FEAT[i][0]) i--;
+    const [st,day,name,head,col]=FEAT[i]; const end=i<FEAT.length-1?FEAT[i+1][0]:F_END; const lt=t-st;
+    // caption swap: out in last SW s, in at start
+    const pin=eo(prog(lt,0,.4)), pout=eio(prog(t,end-SW-.02,end-.02));
+    $('day').textContent=day; $('feat').innerHTML=name; $('feat').style.color=col; $('head').innerHTML=head;
+    const cap=$('cap'); cap.style.opacity=pin*(1-pout); cap.style.transform=`translateY(${(1-pin)*40-pout*30}px)`;
+    // rail
+    [...$('rail').children].forEach((d,k)=>{ d.style.background=k<i?'#0E0F1C':k===i?col:'#DADAE4'; d.style.width=k===i?'86px':'46px'; });
+    // phone: enter at 4.0, leave at end
+    const pe=eo(prog(t,4,4.6)), px=eio(prog(t,F_END-.3,F_END-.02));
+    set('phone',{o:pe*(1-px),y:(1-pe)*160-px*40,s:1.08});
+    for(let k=1;k<=9;k++) $('sc'+k).style.display=k===i+1?'block':'none';
+    const sc=$('sc'+(i+1)); const si=eo(prog(lt,0,.32)), so=i<8?eio(prog(t,end-SW-.02,end-.02)):0;
+    sc.style.opacity=si*(1-so); sc.style.transform=`translateY(${(1-si)*36-so*24}px)`;
+    $('status').style.color=i===0?'#fff':'#0E0F1C';
+    SCREEN[i](lt,t);
+  }
+  // end card
+  $('end').style.display=t>=F_END?'block':'none';
+  if(t>=F_END){ const lt=t-F_END;
+    const a=eo(prog(lt,0,.4)); set('e1',{o:a,y:(1-a)*40,s:.9+.1*spring(lt)});
+    [['e2',.15],['e3',.55],['e4',.95]].forEach(([id,d])=>{const p=eo(prog(lt,d,d+.45)); set(id,{o:p,y:(1-p)*44});});
+  }
+}
+const SCREEN=[
+ (lt)=>{ const s=Math.floor(lt*2); const rem=6*60+12-s; $('clock').textContent=pad(Math.floor(rem/60))+':'+pad(rem%60);
+   const tot=8*60+48+s; $('total').textContent='Total '+Math.floor(tot/60)+':'+pad(tot%60); $('ring').setAttribute('stroke-dashoffset',(980.18*(1-(.58+lt*.04))).toFixed(1)); },
+ (lt)=>{ const [svg,landed]=tree(lt); $('tree').innerHTML=svg; $('landed').textContent=landed+' / 9';
+   const ap=landed>=3; $('treePill').innerHTML=ap?'<i style="width:6px;height:6px;border-radius:3px;background:#C77B3A"></i>Apprentice':'<i style="width:6px;height:6px;border-radius:3px;background:#9BA0B1"></i>Day one'; },
+ (lt)=>{ const left=101-Math.floor(lt); $('lcTime').textContent=Math.floor(left/60)+':'+pad(left%60); $('lcDot').style.opacity=.3+.7*(.5+.5*Math.cos(lt*4.5));
+   tap('t3a',lt,.5); tap('t3b',lt,1.0); tap('t3c',lt,1.75);
+   const ph=eo(prog(lt,.55,.8)); $('lcPhoto').style.opacity=ph; $('lcEmpty').style.opacity=1-ph;
+   const sf=eo(prog(lt,1.05,1.3)); $('selfieImg').style.opacity=sf; $('selfieEmpty').style.opacity=1-sf;
+   const posted=lt>=1.8; $('lcBtn').textContent=posted?'✓ Posted · +10 XP':'Post Larp Check · +10 XP'; $('lcBtn').style.background=posted?'var(--good)':'var(--primary)';
+   set('lcBtn',{s:lt>=1.7&&lt<1.85?.975:1}); },
+ (lt)=>{ const n=Math.max(0,Math.min(4,Math.floor((lt-.25)/.5)+1)); $('k2').textContent=8+n; $('k1').textContent=6+(lt>=1.5?1:0);
+   $('sum').textContent=(16+n+(lt>=1.5?1:0))+' kudos · '+(lt>=1.0?4:3)+' comments';
+   const b=prog(lt,.5,1.4); set('burst',{o:b>0&&b<1?Math.min(1,Math.sin(b*Math.PI)*1.6):0,s:b<.25?.4+2.8*b:1});
+   const on=lt>=.5; $('kGT').style.background=on?'var(--soft)':'var(--fill)'; $('kGT').style.color=on?'var(--strong)':''; $('kGTi').style.display=on?'inline-block':'none'; $('k2').style.color=on?'var(--strong)':''; },
+ (lt)=>{ const q=eo(prog(lt,.1,.4)); set('q',{o:q,y:(1-q)*16}); const c=eo(prog(lt,.3,.6)); set('qclip',{o:c,y:(1-c)*16});
+   const ty=prog(lt,.6,.75)*(1-prog(lt,1.15,1.25)); $('typing').style.opacity=ty; $('typing').style.display=lt<1.25?'inline-flex':'none';
+   document.querySelectorAll('.dt').forEach((d,k)=>d.style.opacity=.35+.65*(.5+.5*Math.sin(lt*12-k*1.2)));
+   const a=eo(prog(lt,1.25,1.55)); set('ans',{o:a,y:(1-a)*16}); },
+ (lt)=>{ const days=3+(lt>=.75?1:0)+(lt>=1.5?1:0); document.querySelectorAll('.qd').forEach((d,k)=>{ const on=k<days; d.style.background=on?'#2F8FDE':'#E6E6EE';
+     const just=(k===3&&lt>=.75&&lt<1.1)||(k===4&&lt>=1.5&&lt<1.85); d.style.transform=just?`scaleY(${1+.4*Math.sin(prog(lt,k===3?.75:1.5,k===3?1.1:1.85)*Math.PI)})`:'none'; });
+   $('qprog').textContent=days+' of 5 days'+(days===5?' · done':''); const qd=eo(prog(lt,1.6,1.9)); set('qdone',{o:qd,y:(1-qd)*30}); },
+ (lt)=>{ const meR=9-2*eio(prog(lt,.5,.8))-2*eio(prog(lt,1,1.3))-eio(prog(lt,1.5,1.8)); const ROWH=50;
+   document.querySelectorAll('.lbr').forEach(el=>{ let r; if(el.dataset.me) r=meR; else { const b=+el.dataset.r; r=b+clamp((b+1)-meR,0,1); }
+     el.style.transform=`translateY(${(r-4)*ROWH}px)`; el.querySelector('.rk').textContent=Math.round(r); el.style.opacity=clamp(9.6-r); });
+   const me=document.querySelector('.lbr[data-me]'); me.querySelector('.mins').textContent=(1820+Math.round(eio(clamp(lt/1.8))*490)).toLocaleString('en-US')+' min'; },
+ (lt)=>{ tap('t8',lt,1.0); const g=lt>=1.0; $('gbtn').textContent=g?'✓ Going':'I’m going'; $('gbtn').style.background=g?'var(--soft)':'var(--primary)'; $('gbtn').style.color=g?'var(--strong)':'#fff';
+   $('going').textContent=(g?12:11)+' going'; $('liveDot').style.opacity=.3+.7*(.5+.5*Math.cos(lt*4.5)); $('roomN').textContent=lt>=.5?7:6; set('gbtn',{s:lt>=.92&&lt<1.08?.95:1}); },
+ (lt)=>{ const T=['Larping','Apprentice','Adept','Legit'], M=['#9BA0B1','#C77B3A','#8E9AAD','#FFC53D']; const k=Math.min(3,Math.floor((lt+.0)/.5));
+   $('tierN').textContent=T[k]; $('tierDot').style.display=k===3?'none':'block'; $('tierDot').style.background=M[k]; $('tierV').style.display=k===3?'inline-block':'none';
+   $('tierP').style.background=k===3?'rgba(255,197,61,.2)':'rgba(255,255,255,.12)'; $('tierP').style.color=k===3?'#FFC53D':'#fff';
+   $('lvl').textContent=[3,6,9,12][k]; $('hrs').textContent=['4h','26h','88h','160h'][k]; $('nodesC').textContent=['0','3','6','9'][k]+' / 9 nodes';
+   const mk=spring(lt-1.5); $('stamp9').style.opacity=clamp((lt-1.5)/.08); $('stamp9').style.transform=`scale(${1.6-.6*mk}) rotate(${(1-mk)*-14}deg)`;
+   $('glow9').style.opacity=clamp((lt-1.6)/.3)*(.6+.4*Math.sin(Math.max(0,lt-1.6)*4)); }
+];
+window.render=render;
+</script></body></html>
