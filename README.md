@@ -84,6 +84,30 @@ Or use the email code flow — local Supabase captures mail in **Inbucket** at
   (`save_session` in Phase 2, `cast_vouch` in Phase 7).
 - **Seed data is code** (`supabase/seed.sql`), rebuilt from scratch by `db:reset`.
 
+## Launching a brand-new community (cold start)
+
+A new app has no posts, so migration `0015_official_guides` seeds nine clearly labelled
+**official larpr guide** accounts (one per launch skill) with two posts each: a starter session
+and a tip, each with a photo. They are not fake people: they carry an "Official" badge, say so
+in their bio, have no kudos, followers, tier, XP or streaks, cannot sign in or be messaged, and
+stay off the leaderboards.
+
+- **Fade-out:** the For You feed blends guide posts with real ones and drops them once there
+  are about 12 real posts (`src/features/posts/blend.ts`). Following feeds are never padded.
+- **Deploy order:** the client selects `avatar_path`, `is_official` and `public_path`, so run
+  `npx supabase db push` **before** shipping the client build. Migration `0014` also creates the
+  launch skill catalog, because production never had approved skills.
+- **Images:** run `npx supabase seed buckets --linked` after the push to upload
+  `supabase/seed-media/official/` into the public `official` bucket (locally, `db reset` does it).
+  Skill photos are bundled in `assets/covers/` (up to three per skill). They are the skill
+  sphere's covers and stand in for any post without a photo of its own, across the feed,
+  stories, Explore and profiles. All of these images are AI-generated. To
+  replace them with licensed photography, overwrite the files with the same names and re-seed.
+- **Still seed-only:** quests, standards, rooms and guilds. Arena and Explore show honest
+  empty states in production until those are created.
+- **Retiring guides:** `delete from auth.users where email like 'guide-%@guides.larpr.invalid'`
+  removes the accounts and their posts.
+
 ## Auth providers
 
 - **Email code** works out of the box (locally via Inbucket).

@@ -2,14 +2,15 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Animated, Image, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
-import { Art } from '@/src/components/Art';
 import { Avatar } from '@/src/components/Avatar';
 import { Icon } from '@/src/components/Icon';
 import { IconButton } from '@/src/components/IconButton';
+import { OfficialPill } from '@/src/components/OfficialPill';
 import { PressableScale } from '@/src/components/PressableScale';
+import { SkillPhoto } from '@/src/components/SkillPhoto';
 import { TierPill } from '@/src/components/TierPill';
 import { VideoProof } from '@/src/components/VideoProof';
-import { useSignedUrl } from '@/src/features/media/api';
+import { officialMediaUrl, usePostMediaUrl } from '@/src/features/media/public';
 import { useToggleKudo, useToggleSave } from '@/src/features/posts/hooks';
 import { formatDuration, formatRelativeTime } from '@/src/lib/format';
 import { fonts, useTheme } from '@/src/theme';
@@ -19,7 +20,7 @@ const DOUBLE_TAP_MS = 320;
 
 function PostMedia({ post, blurred }: { post: FeedPost; blurred: boolean }) {
   const { colors } = useTheme();
-  const signed = useSignedUrl(post.media[0]?.key ?? null);
+  const signed = usePostMediaUrl(post.media[0]);
   const toggleKudo = useToggleKudo();
   const lastTap = useRef(0);
   const [burst, setBurst] = useState(false);
@@ -47,8 +48,6 @@ function PostMedia({ post, blurred }: { post: FeedPost; blurred: boolean }) {
     }
   };
 
-  const quality = 0.2 + post.authorTier * 0.25;
-
   if (signed && post.media[0]?.kind === 'video' && !blurred) {
     return <VideoProof uri={signed} />;
   }
@@ -59,13 +58,10 @@ function PostMedia({ post, blurred }: { post: FeedPost; blurred: boolean }) {
         {signed ? (
           <Image source={{ uri: signed }} style={styles.mediaImg} accessibilityLabel={`${post.skillName} practice`} />
         ) : (
-          <Art
-            seed={`${post.id}:${post.skillId}`}
-            color={post.skillColor}
-            letter={post.skillName}
-            quality={quality}
-            aspectRatio={16 / 10}
-            style={blurred && { opacity: 0.35 }}
+          <SkillPhoto
+            skill={{ slug: post.skillSlug, name: post.skillName, category: post.skillCategory }}
+            seed={post.id}
+            style={[styles.mediaImg, blurred && { opacity: 0.35 }]}
           />
         )}
         {post.selfie ? (
@@ -152,17 +148,24 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
       {/* header */}
       <View style={styles.head}>
         <Pressable onPress={openProfile} accessibilityLabel={`${post.authorName}’s profile`}>
-          <Avatar name={post.authorName} color={post.authorColor} size={40} />
+          <Avatar
+            name={post.authorName}
+            color={post.authorColor}
+            uri={officialMediaUrl(post.authorAvatarPath)}
+            size={40}
+          />
         </Pressable>
         <Pressable style={styles.headText} onPress={openProfile}>
           <View style={styles.nameRow}>
             <Text numberOfLines={1} style={[styles.name, { color: colors.ink }]}>
               {isMe ? 'You' : post.authorName}
             </Text>
-            <TierPill tier={tierName(post.authorTier)} />
+            {post.authorOfficial ? <OfficialPill /> : <TierPill tier={tierName(post.authorTier)} />}
           </View>
           <Text numberOfLines={1} style={[styles.subline, { color: colors.muted }]}>
-            {formatRelativeTime(post.at)} · @{post.authorHandle}
+            {post.authorOfficial
+              ? `From the larpr team · @${post.authorHandle}`
+              : `${formatRelativeTime(post.at)} · @${post.authorHandle}`}
           </Text>
         </Pressable>
         {post.kind === 'larp_check' ? (
@@ -186,7 +189,7 @@ export function PostCard({ post, meId }: { post: FeedPost; meId: string | undefi
           {post.minutes > 0 ? (
             <>
               <View style={[styles.statDivider, { backgroundColor: colors.line }]} />
-              <Stat label="Time" value={formatDuration(post.minutes * 60)} />
+              <Stat label={post.authorOfficial ? 'Suggested' : 'Time'} value={formatDuration(post.minutes * 60)} />
             </>
           ) : null}
           {post.nodeName ? (

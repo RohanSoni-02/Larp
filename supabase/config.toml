@@ -118,12 +118,14 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-# Uncomment to configure local storage buckets
-# [storage.buckets.images]
-# public = false
-# file_size_limit = "50MiB"
-# allowed_mime_types = ["image/png", "image/jpeg"]
-# objects_path = "./images"
+# Photos for the official larpr guide accounts (see migration 0015). `supabase db reset`
+# uploads supabase/seed-media/official into this bucket locally; for a hosted project run
+# `npx supabase seed buckets --linked`.
+[storage.buckets.official]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
+objects_path = "./seed-media/official"
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]

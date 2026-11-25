@@ -3,13 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Animated, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Art } from '@/src/components/Art';
 import { Avatar } from '@/src/components/Avatar';
 import { Icon } from '@/src/components/Icon';
 import { IconButton } from '@/src/components/IconButton';
 import { Scrim } from '@/src/components/Scrim';
+import { SkillPhoto } from '@/src/components/SkillPhoto';
 import { TierPill } from '@/src/components/TierPill';
-import { useSignedUrl } from '@/src/features/media/api';
+import { officialMediaUrl, usePostMediaUrl } from '@/src/features/media/public';
 import { useStoryPosts } from '@/src/features/posts/hooks';
 import { formatDuration, formatTime } from '@/src/lib/format';
 import { useUiStore } from '@/src/stores/ui';
@@ -30,7 +30,7 @@ export default function StoryScreen() {
   const [index, setIndex] = useState(0);
   const [progress] = useState(() => new Animated.Value(0));
   const item = items[Math.min(index, items.length - 1)];
-  const mediaUrl = useSignedUrl(item?.media[0]?.key ?? null);
+  const mediaUrl = usePostMediaUrl(item?.media[0]);
 
   function advance(dir: 1 | -1) {
     const next = index + dir;
@@ -81,7 +81,11 @@ export default function StoryScreen() {
         {mediaUrl ? (
           <Image source={{ uri: mediaUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
-          <Art seed={item.id} color={item.skillColor} letter={item.skillName} quality={0.7} aspectRatio={0.55} style={StyleSheet.absoluteFill} />
+          <SkillPhoto
+            skill={{ slug: item.skillSlug, name: item.skillName, category: item.skillCategory }}
+            seed={item.id}
+            style={StyleSheet.absoluteFill}
+          />
         )}
       </Pressable>
       <Scrim edge="top" extent={0.24} opacity={0.5} />
@@ -104,7 +108,7 @@ export default function StoryScreen() {
 
       {/* Header */}
       <View style={[styles.header, { top: top + 18 }]} pointerEvents="box-none">
-        <Avatar name={item.authorName} color={item.authorColor} size={36} />
+        <Avatar name={item.authorName} color={item.authorColor} uri={officialMediaUrl(item.authorAvatarPath)} size={36} />
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{item.authorName}</Text>
           <Text style={styles.time}>{formatTime(item.at)}</Text>

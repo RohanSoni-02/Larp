@@ -7,20 +7,27 @@ export async function getMyProfile(userId: string): Promise<Profile | null> {
   return data as Profile | null;
 }
 
-export type SuggestedPerson = Pick<Profile, 'id' | 'handle' | 'display_name' | 'avatar_color' | 'bio'>;
+export type SuggestedPerson = Pick<
+  Profile,
+  'id' | 'handle' | 'display_name' | 'avatar_color' | 'avatar_path' | 'is_official' | 'bio'
+>;
 
-/** People who practise any of the given skills — onboarding suggestions. */
-export async function getSuggestedPeople(
+const SUGGESTED_COLUMNS = 'id, handle, display_name, avatar_color, avatar_path, is_official, bio';
+/** How many official guides to suggest; the rest of the list is real people. */
+const MAX_GUIDES = 3;
+
+async function suggestFor(
   skillIds: string[],
   excludeUserId: string,
-  limit = 6,
+  official: boolean,
+  limit: number,
 ): Promise<SuggestedPerson[]> {
-  if (skillIds.length === 0) return [];
   const { data, error } = await supabase
     .from('user_skills')
-    .select('user_id, profiles!inner(id, handle, display_name, avatar_color, bio)')
+    .select(`user_id, profiles!inner(${SUGGESTED_COLUMNS})`)
     .in('skill_id', skillIds)
     .neq('user_id', excludeUserId)
+    .eq('profiles.is_official', official)
     .limit(50);
   if (error) throw error;
 
@@ -35,6 +42,22 @@ export async function getSuggestedPeople(
     }
   }
   return people;
+}
+
+/**
+ * People who practise any of the given skills, for onboarding. Official larpr
+ * guides come first (labelled in the UI) so a new user never sees an empty
+ * step, followed by real people.
+ */
+export async function getSuggestedPeople(
+  skillIds: string[],
+  excludeUserId: string,
+  limit = 6,
+): Promise<SuggestedPerson[]> {
+  if (skillIds.length === 0) return [];
+  const guides = await suggestFor(skillIds, excludeUserId, true, MAX_GUIDES);
+  const people = await suggestFor(skillIds, excludeUserId, false, limit - guides.length);
+  return [...guides, ...people];
 }
 
 export type OnboardingInput = {

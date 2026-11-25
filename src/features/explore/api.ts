@@ -1,10 +1,18 @@
 import { supabase } from '@/src/lib/supabase';
-import type { CoopRoom, GuildCard, Quest, Standard } from '@/src/types/app';
+import type { CoopRoom, GuildCard, PostMedia, Quest, SkillCategory, Standard } from '@/src/types/app';
 
  
 
 export type SearchResult = {
-  users: { id: string; name: string; handle: string; color: string; portfolio: string }[];
+  users: {
+    id: string;
+    name: string;
+    handle: string;
+    color: string;
+    avatarPath: string | null;
+    official: boolean;
+    portfolio: string;
+  }[];
 };
 
 export async function searchPeople(query: string): Promise<SearchResult['users']> {
@@ -12,7 +20,7 @@ export async function searchPeople(query: string): Promise<SearchResult['users']
   if (!q) return [];
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, handle, display_name, avatar_color, user_skills ( tier, skills ( lower_name ) )')
+    .select('id, handle, display_name, avatar_color, avatar_path, is_official, user_skills ( tier, skills ( lower_name ) )')
     .or(`display_name.ilike.%${q}%,handle.ilike.%${q}%`)
     .limit(6);
   if (error) throw error;
@@ -22,10 +30,14 @@ export async function searchPeople(query: string): Promise<SearchResult['users']
     name: p.display_name,
     handle: p.handle,
     color: p.avatar_color,
-    portfolio: (p.user_skills ?? [])
-      .sort((a: any, b: any) => b.tier - a.tier)
-      .map((us: any) => `${tiers[us.tier]} in ${us.skills?.lower_name ?? '?'}`)
-      .join(', '),
+    avatarPath: p.avatar_path ?? null,
+    official: Boolean(p.is_official),
+    portfolio: p.is_official
+      ? `Official larpr guide${p.user_skills?.[0]?.skills?.lower_name ? ` · ${p.user_skills[0].skills.lower_name}` : ''}`
+      : (p.user_skills ?? [])
+          .sort((a: any, b: any) => b.tier - a.tier)
+          .map((us: any) => `${tiers[us.tier]} in ${us.skills?.lower_name ?? '?'}`)
+          .join(', '),
   }));
 }
 
@@ -37,16 +49,25 @@ export type PopularTile = {
   skillName: string;
   skillLower: string;
   skillColor: string;
+  skillSlug: string | null;
+  skillCategory: SkillCategory | null;
   note: string | null;
   kudos: number;
+  /** First photo on the post, if any; tiles fall back to generated art without one. */
+  image: PostMedia | null;
 };
+
+function firstImage(rows: any[] | null | undefined): PostMedia | null {
+  const m = (rows ?? []).find((r) => r.storage_key && r.kind === 'image');
+  return m ? { key: m.storage_key, kind: 'image', publicPath: m.public_path ?? null } : null;
+}
 
 /** Popular sessions for the masonry grid (by kudos count). */
 export async function getPopularSessions(skillId: string | null, query: string): Promise<PopularTile[]> {
   let q = supabase
     .from('sessions')
     .select(
-      'id, user_id, duration_sec, note, profiles!sessions_user_id_fkey ( display_name ), skills ( name, lower_name, color ), kudos ( id )',
+      'id, user_id, duration_sec, note, profiles!sessions_user_id_fkey ( display_name ), skills ( name, lower_name, color, slug, category ), kudos ( id ), media ( storage_key, public_path, kind, status )',
     )
     .eq('visibility', 'public')
     .order('started_at', { ascending: false })
@@ -64,8 +85,11 @@ export async function getPopularSessions(skillId: string | null, query: string):
       skillName: row.skills?.name ?? 'Skill',
       skillLower: row.skills?.lower_name ?? 'skill',
       skillColor: row.skills?.color ?? '#5B3DF5',
+      skillSlug: row.skills?.slug ?? null,
+      skillCategory: row.skills?.category ?? null,
       note: row.note as string | null,
       kudos: (row.kudos ?? []).length,
+      image: firstImage(row.media),
     }))
     .filter(
       (t) =>
@@ -223,7 +247,6 @@ export type LeaderboardEntry = {
   handle: string;
   displayName: string;
   avatarColor: string;
-  avatarUrl?: string;
   tier: number;
   minutes: number;
   sessions: number;
@@ -231,129 +254,29 @@ export type LeaderboardEntry = {
   rank: number;
 };
 
-const LEADERBOARD_PORTRAITS: string[] = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=240&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=240&q=80',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=240&q=80',
-];
-
-const FALLBACK_LEADERBOARD: LeaderboardEntry[] = [
-  {
-    userId: '10000000-0000-4000-8000-000000000007',
-    handle: 'aisha.lever',
-    displayName: 'Aisha B.',
-    avatarColor: '#B23A8F',
-    avatarUrl: LEADERBOARD_PORTRAITS[0],
-    tier: 3,
-    minutes: 420,
-    sessions: 9,
-    nodesLanded: 3,
-    rank: 1,
-  },
-  {
-    userId: '10000000-0000-4000-8000-000000000010',
-    handle: 'kenji.plays',
-    displayName: 'Kenji T.',
-    avatarColor: '#2B59C3',
-    avatarUrl: LEADERBOARD_PORTRAITS[1],
-    tier: 3,
-    minutes: 365,
-    sessions: 8,
-    nodesLanded: 2,
-    rank: 2,
-  },
-  {
-    userId: '10000000-0000-4000-8000-000000000003',
-    handle: 'wickedwax.lena',
-    displayName: 'Lena W.',
-    avatarColor: '#F08A24',
-    avatarUrl: LEADERBOARD_PORTRAITS[2],
-    tier: 3,
-    minutes: 310,
-    sessions: 6,
-    nodesLanded: 2,
-    rank: 3,
-  },
-  {
-    userId: '10000000-0000-4000-8000-000000000004',
-    handle: 'devpushes',
-    displayName: 'Dev P.',
-    avatarColor: '#7A5CFF',
-    avatarUrl: LEADERBOARD_PORTRAITS[3],
-    tier: 2,
-    minutes: 255,
-    sessions: 6,
-    nodesLanded: 1,
-    rank: 4,
-  },
-  {
-    userId: '10000000-0000-4000-8000-000000000001',
-    handle: 'maya.lifts',
-    displayName: 'Maya R.',
-    avatarColor: '#E0548A',
-    avatarUrl: LEADERBOARD_PORTRAITS[4],
-    tier: 1,
-    minutes: 210,
-    sessions: 5,
-    nodesLanded: 1,
-    rank: 5,
-  },
-  {
-    userId: '10000000-0000-4000-8000-000000000008',
-    handle: 'marco.chords',
-    displayName: 'Marco D.',
-    avatarColor: '#3D7DCA',
-    avatarUrl: LEADERBOARD_PORTRAITS[5],
-    tier: 2,
-    minutes: 175,
-    sessions: 4,
-    nodesLanded: 1,
-    rank: 6,
-  },
-];
-
 export async function getLeaderboard(params: {
   skillId?: string | null;
   guildId?: string | null;
   followingOnly?: boolean;
   days?: number;
 }): Promise<LeaderboardEntry[]> {
-  const days = params.days ?? 7;
-  const multiplier = days === 30 ? 3.8 : days === 90 ? 10.5 : 1;
-
-  try {
-    const { data, error } = await supabase.rpc('get_leaderboard', {
-      p_skill_id: params.skillId ?? undefined,
-      p_guild_id: params.guildId ?? undefined,
-      p_following_only: params.followingOnly ?? false,
-      p_days: days,
-    });
-    if (error) throw error;
-    if (data && data.length > 0) {
-      return (data as any[]).map((row: any, idx: number) => ({
-        userId: row.user_id,
-        handle: row.handle,
-        displayName: row.display_name,
-        avatarColor: row.avatar_color,
-        avatarUrl: LEADERBOARD_PORTRAITS[idx % LEADERBOARD_PORTRAITS.length],
-        tier: row.tier,
-        minutes: row.minutes,
-        sessions: row.sessions,
-        nodesLanded: row.nodes_landed,
-        rank: row.rank_position,
-      }));
-    }
-  } catch {
-    // Fall back to curated community rankings if RPC is unavailable
-  }
-
-  return FALLBACK_LEADERBOARD.map((entry) => ({
-    ...entry,
-    minutes: Math.round(entry.minutes * multiplier),
-    sessions: Math.max(1, Math.round(entry.sessions * (multiplier * 0.85))),
+  const { data, error } = await supabase.rpc('get_leaderboard', {
+    p_skill_id: params.skillId ?? undefined,
+    p_guild_id: params.guildId ?? undefined,
+    p_following_only: params.followingOnly ?? false,
+    p_days: params.days ?? 7,
+  });
+  if (error) throw error;
+  // A new community has an empty board; the screen renders an honest empty state.
+  return ((data ?? []) as any[]).map((row) => ({
+    userId: row.user_id,
+    handle: row.handle,
+    displayName: row.display_name,
+    avatarColor: row.avatar_color,
+    tier: row.tier,
+    minutes: row.minutes,
+    sessions: row.sessions,
+    nodesLanded: row.nodes_landed,
+    rank: row.rank_position,
   }));
 }

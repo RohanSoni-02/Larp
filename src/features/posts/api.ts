@@ -6,24 +6,24 @@ import type { FeedPost, PostMedia } from '@/src/types/app';
 
 const SESSION_SELECT = [
   'id, user_id, skill_id, started_at, duration_sec, note, label, landed_node, created_at',
-  'profiles!sessions_user_id_fkey ( id, handle, display_name, avatar_color, user_skills ( skill_id, tier ) )',
-  'skills ( id, name, lower_name, color, kudo_label, slug )',
+  'profiles!sessions_user_id_fkey ( id, handle, display_name, avatar_color, avatar_path, is_official, user_skills ( skill_id, tier ) )',
+  'skills ( id, name, lower_name, color, kudo_label, slug, category )',
   'skill_nodes ( name )',
   'kudos ( label, giver_id )',
   'comments ( id )',
   'saves ( user_id )',
-  'media ( storage_key, kind, status )',
+  'media ( storage_key, public_path, kind, status )',
 ].join(',');
 
 const LARP_CHECK_SELECT = [
   'id, user_id, skill_id, posted_at, is_late',
-  'profiles!larp_checks_user_id_fkey ( id, handle, display_name, avatar_color, user_skills ( skill_id, tier ) )',
-  'skills ( id, name, lower_name, color, kudo_label, slug )',
+  'profiles!larp_checks_user_id_fkey ( id, handle, display_name, avatar_color, avatar_path, is_official, user_skills ( skill_id, tier ) )',
+  'skills ( id, name, lower_name, color, kudo_label, slug, category )',
   'kudos ( label, giver_id )',
   'comments ( id )',
   'saves ( user_id )',
-  'work:media!larp_checks_work_media_id_fkey ( storage_key, kind, status )',
-  'selfie:media!larp_checks_selfie_media_id_fkey ( storage_key, kind, status )',
+  'work:media!larp_checks_work_media_id_fkey ( storage_key, public_path, kind, status )',
+  'selfie:media!larp_checks_selfie_media_id_fkey ( storage_key, public_path, kind, status )',
 ].join(',');
 
  
@@ -36,7 +36,11 @@ function tierOf(profile: any, skillId: string): number {
 function mediaList(rows: any[] | null | undefined): PostMedia[] {
   return (rows ?? [])
     .filter((m) => m.storage_key)
-    .map((m) => ({ key: m.storage_key as string, kind: m.kind as 'image' | 'video' }));
+    .map((m) => ({
+      key: m.storage_key as string,
+      kind: m.kind as 'image' | 'video',
+      publicPath: (m.public_path as string | null | undefined) ?? null,
+    }));
 }
 
 function mapSession(row: any, meId: string | undefined): FeedPost {
@@ -55,11 +59,15 @@ function mapSession(row: any, meId: string | undefined): FeedPost {
     authorName: p?.display_name ?? 'Larper',
     authorHandle: p?.handle ?? '',
     authorColor: p?.avatar_color ?? '#5B3DF5',
+    authorAvatarPath: p?.avatar_path ?? null,
+    authorOfficial: Boolean(p?.is_official),
     authorTier: tierOf(p, row.skill_id),
     skillId: row.skill_id,
     skillName: s?.name ?? 'Skill',
     skillLower: s?.lower_name ?? 'skill',
     skillColor: s?.color ?? '#5B3DF5',
+    skillSlug: s?.slug ?? null,
+    skillCategory: s?.category ?? null,
     kudoLabel: s?.kudo_label ?? 'Clean technique',
     nodeName: row.skill_nodes?.name ?? null,
     landed: row.landed_node,

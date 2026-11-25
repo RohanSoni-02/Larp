@@ -1,9 +1,8 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import SphereImageGrid from '@/components/ui/img-sphere';
-import { Art } from '@/src/components/Art';
 import { Avatar } from '@/src/components/Avatar';
 import { Chip } from '@/src/components/Chip';
 import { EmptyState } from '@/src/components/EmptyState';
@@ -13,6 +12,9 @@ import { IconButton } from '@/src/components/IconButton';
 import { Scrim } from '@/src/components/Scrim';
 import { Screen } from '@/src/components/Screen';
 import { SectionHeader } from '@/src/components/SectionHeader';
+import { SkillPhoto } from '@/src/components/SkillPhoto';
+import { officialMediaUrl, usePostMediaUrl } from '@/src/features/media/public';
+import type { PopularTile } from '@/src/features/explore/api';
 import { usePopularSessions, useSearchPeople } from '@/src/features/explore/hooks';
 import { useUsableSkills } from '@/src/features/skills/hooks';
 import { buildCatalogSphereImages } from '@/src/features/skills/skillImages';
@@ -123,7 +125,7 @@ export default function ExploreScreen() {
               onPress={() => router.push({ pathname: '/user/[id]', params: { id: u.id } })}
               accessibilityLabel={`${u.name}’s profile`}
             >
-              <Avatar name={u.name} color={u.color} size={44} />
+              <Avatar name={u.name} color={u.color} uri={officialMediaUrl(u.avatarPath)} size={44} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={[styles.userName, { color: colors.ink }]} numberOfLines={1}>
                   {u.name}
@@ -192,13 +194,7 @@ export default function ExploreScreen() {
                     style={({ pressed }) => pressed && { opacity: 0.88 }}
                   >
                     <View style={styles.tile}>
-                      <Art
-                        seed={tile.id}
-                        color={tile.skillColor}
-                        letter={tile.skillName}
-                        quality={Math.min(0.95, 0.3 + tile.kudos / 20)}
-                        aspectRatio={columns.ratios[(ci + ti) % 3]}
-                      />
+                      <TileImage tile={tile} aspectRatio={columns.ratios[(ci + ti) % 3]} />
                       <Scrim extent={0.5} />
                       <View style={styles.tileCap}>
                         <Text style={styles.tileAuthor} numberOfLines={1}>
@@ -234,6 +230,28 @@ export default function ExploreScreen() {
       )}
       <View style={{ height: 28 }} />
     </Screen>
+  );
+}
+
+/** The post's own photo when it has one, otherwise a photo of the skill. */
+function TileImage({ tile, aspectRatio }: { tile: PopularTile; aspectRatio: number }) {
+  const url = usePostMediaUrl(tile.image);
+  if (url) {
+    return (
+      <Image
+        source={{ uri: url }}
+        style={{ width: '100%', aspectRatio }}
+        resizeMode="cover"
+        accessibilityIgnoresInvertColors
+      />
+    );
+  }
+  return (
+    <SkillPhoto
+      skill={{ slug: tile.skillSlug, name: tile.skillName, category: tile.skillCategory }}
+      seed={tile.id}
+      aspectRatio={aspectRatio}
+    />
   );
 }
 

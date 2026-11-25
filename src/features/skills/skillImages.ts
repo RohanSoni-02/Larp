@@ -1,87 +1,120 @@
+import { Asset } from 'expo-asset';
+
 import type { ImageData } from '@/components/ui/img-sphere';
 import { CATEGORY_LABELS, tierName, type Skill, type SkillCategory, type UserSkill } from '@/src/types/app';
 
 /**
- * Curated Unsplash stock photography for skill categories and individual skills.
+ * Photos for skills, bundled with the app (assets/covers) so nothing is
+ * hot-linked and they work offline. Each launch skill has a small pool: its
+ * cover first, then extra shots. Skills without their own pool borrow from
+ * their category.
  */
-const CATEGORY_IMAGES: Record<SkillCategory, string[]> = {
-  music: [
-    'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?auto=format&fit=crop&w=600&q=80',
+const SKILL_PHOTOS: Record<string, number[]> = {
+  piano: [
+    require('@/assets/covers/piano.jpg'),
+    require('@/assets/covers/piano-1.jpg'),
+    require('@/assets/covers/piano-2.jpg'),
   ],
-  visual_art: [
-    'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=600&q=80',
+  guitar: [
+    require('@/assets/covers/guitar.jpg'),
+    require('@/assets/covers/guitar-1.jpg'),
+    require('@/assets/covers/guitar-2.jpg'),
   ],
-  crafts: [
-    'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1584992236310-6edddc08a2f9?auto=format&fit=crop&w=600&q=80',
+  drawing: [
+    require('@/assets/covers/drawing.jpg'),
+    require('@/assets/covers/drawing-1.jpg'),
+    require('@/assets/covers/drawing-2.jpg'),
   ],
-  food: [
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80',
+  baking: [
+    require('@/assets/covers/baking.jpg'),
+    require('@/assets/covers/baking-1.jpg'),
+    require('@/assets/covers/baking-2.jpg'),
   ],
-  fitness: [
-    'https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
+  pottery: [
+    require('@/assets/covers/pottery.jpg'),
+    require('@/assets/covers/pottery-1.jpg'),
+    require('@/assets/covers/pottery-2.jpg'),
   ],
-  mind: [
-    'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=600&q=80',
+  candle: [
+    require('@/assets/covers/candle.jpg'),
+    require('@/assets/covers/candle-1.jpg'),
+    require('@/assets/covers/candle-2.jpg'),
   ],
-  tech: [
-    'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80',
+  calisthenics: [
+    require('@/assets/covers/calisthenics.jpg'),
+    require('@/assets/covers/calisthenics-1.jpg'),
+    require('@/assets/covers/calisthenics-2.jpg'),
   ],
-  performance: [
-    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1485579149621-3123dd979885?auto=format&fit=crop&w=600&q=80',
+  spanish: [
+    require('@/assets/covers/spanish.jpg'),
+    require('@/assets/covers/spanish-1.jpg'),
+    require('@/assets/covers/spanish-2.jpg'),
   ],
-  outdoors: [
-    'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=600&q=80',
+  penspin: [
+    require('@/assets/covers/penspin.jpg'),
+    require('@/assets/covers/penspin-1.jpg'),
+    require('@/assets/covers/penspin-2.jpg'),
   ],
+  tech: [require('@/assets/covers/tech.jpg')],
+  outdoors: [require('@/assets/covers/outdoors.jpg')],
 };
 
-const SKILL_NAME_IMAGES: Record<string, string> = {
-  piano: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?auto=format&fit=crop&w=600&q=80',
-  guitar: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=600&q=80',
-  drums: 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?auto=format&fit=crop&w=600&q=80',
-  violin: 'https://images.unsplash.com/photo-1612225330812-01a9c6b355ec?auto=format&fit=crop&w=600&q=80',
-  drawing: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80',
-  photography: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80',
-  watercolor: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=600&q=80',
-  pottery: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=600&q=80',
-  crochet: 'https://images.unsplash.com/photo-1584992236310-6edddc08a2f9?auto=format&fit=crop&w=600&q=80',
-  woodworking: 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=600&q=80',
-  baking: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
-  'bread and sourdough': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80',
-  'latte art': 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
-  climbing: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=600&q=80',
-  skateboarding: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?auto=format&fit=crop&w=600&q=80',
-  calisthenics: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
-  chess: 'https://images.unsplash.com/photo-1529699211952-734e80c4d42b?auto=format&fit=crop&w=600&q=80',
-  'coding projects': 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80',
-  gardening: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=600&q=80',
-  bonsai: 'https://images.unsplash.com/photo-1512428813834-c702c7702b78?auto=format&fit=crop&w=600&q=80',
+const CATEGORY_POOLS: Record<SkillCategory, string[]> = {
+  music: ['piano', 'guitar'],
+  visual_art: ['drawing', 'pottery'],
+  crafts: ['candle', 'pottery'],
+  food: ['baking'],
+  fitness: ['calisthenics'],
+  mind: ['spanish'],
+  tech: ['tech'],
+  performance: ['penspin'],
+  outdoors: ['outdoors'],
 };
+
+/** Skill names (lower-cased) whose pool key differs from their slug. */
+const NAME_TO_POOL: Record<string, string> = {
+  'candle making': 'candle',
+  'pen spinning': 'penspin',
+};
+
+const ALL_PHOTOS = Object.values(SKILL_PHOTOS).flat();
+
+function hash(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+export type SkillRef = {
+  slug?: string | null;
+  name?: string | null;
+  category?: SkillCategory | null;
+};
+
+function poolFor(skill: SkillRef): number[] {
+  const name = skill.name?.trim().toLowerCase() ?? '';
+  const own = SKILL_PHOTOS[skill.slug ?? ''] ?? SKILL_PHOTOS[NAME_TO_POOL[name] ?? name];
+  if (own) return own;
+  const fromCategory = skill.category ? CATEGORY_POOLS[skill.category].flatMap((k) => SKILL_PHOTOS[k] ?? []) : [];
+  return fromCategory.length > 0 ? fromCategory : ALL_PHOTOS;
+}
+
+/**
+ * A photo for a skill. `seed` picks within the skill's pool: a number is used as
+ * an index (0 = the skill's cover), a string (e.g. a post id) is hashed so the
+ * same post always shows the same photo.
+ */
+export function skillPhotoUri(skill: SkillRef, seed: number | string = 0): string {
+  const pool = poolFor(skill);
+  const index = typeof seed === 'number' ? seed : hash(seed);
+  return Asset.fromModule(pool[index % pool.length]!).uri;
+}
 
 export function getSkillImageUrl(name: string, category: SkillCategory, variantIndex = 0): string {
-  const key = name.trim().toLowerCase();
-  if (SKILL_NAME_IMAGES[key] && variantIndex === 0) {
-    return SKILL_NAME_IMAGES[key]!;
-  }
-  const pool = CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES.crafts;
-  return pool[variantIndex % pool.length]!;
+  return skillPhotoUri({ name, category }, variantIndex);
 }
 
 /**

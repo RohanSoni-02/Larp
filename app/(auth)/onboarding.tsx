@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 
 import SphereImageGrid from '@/components/ui/img-sphere';
 import { Avatar } from '@/src/components/Avatar';
+import { OfficialPill } from '@/src/components/OfficialPill';
+import { officialMediaUrl } from '@/src/features/media/public';
 import { Button } from '@/src/components/Button';
 import { Card } from '@/src/components/Card';
 import { Chip } from '@/src/components/Chip';
@@ -43,6 +45,19 @@ export default function OnboardingScreen() {
   const { groups } = useSkillGroups();
   const { data: suggestions = [] } = useSuggestedPeople(store.selectedSkillIds, userId);
   const complete = useCompleteOnboarding();
+
+  // Official guides start followed so the first feed is never empty. They are
+  // plain toggles, so the user can untick any of them. Seeded once per visit.
+  const guidesSeeded = useRef(false);
+  useEffect(() => {
+    if (step !== 2 || guidesSeeded.current || suggestions.length === 0) return;
+    guidesSeeded.current = true;
+    for (const person of suggestions) {
+      if (person.is_official && !store.followUserIds.includes(person.id)) {
+        store.toggleFollow(person.id);
+      }
+    }
+  }, [step, suggestions, store]);
 
   const nameReady = useMemo(
     () => (store.displayName || profile?.display_name || '').trim().length >= 2,
@@ -224,9 +239,16 @@ export default function OnboardingScreen() {
             const following = store.followUserIds.includes(person.id);
             return (
               <View key={person.id} style={styles.personRow}>
-                <Avatar name={person.display_name} color={person.avatar_color} />
+                <Avatar
+                  name={person.display_name}
+                  color={person.avatar_color}
+                  uri={officialMediaUrl(person.avatar_path)}
+                />
                 <View style={styles.personText}>
-                  <Text style={[styles.personName, { color: colors.ink }]}>{person.display_name}</Text>
+                  <View style={styles.personNameRow}>
+                    <Text style={[styles.personName, { color: colors.ink }]}>{person.display_name}</Text>
+                    {person.is_official ? <OfficialPill /> : null}
+                  </View>
                   {person.bio ? (
                     <Text style={[styles.personBio, { color: colors.muted }]} numberOfLines={1}>
                       {person.bio}
@@ -293,6 +315,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   personRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   personText: { flex: 1, minWidth: 0 },
+  personNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   personName: { fontFamily: fonts.bodyBold, fontSize: 15 },
   personBio: { fontFamily: fonts.body, fontSize: 13 },
 });

@@ -758,6 +758,7 @@ export type Database = {
           larp_check_id: string | null;
           moderation: Json | null;
           owner_id: string;
+          public_path: string | null;
           session_id: string | null;
           status: Database["public"]["Enums"]["media_status"];
           storage_key: string;
@@ -771,6 +772,7 @@ export type Database = {
           larp_check_id?: string | null;
           moderation?: Json | null;
           owner_id: string;
+          public_path?: string | null;
           session_id?: string | null;
           status?: Database["public"]["Enums"]["media_status"];
           storage_key: string;
@@ -783,6 +785,7 @@ export type Database = {
           larp_check_id?: string | null;
           moderation?: Json | null;
           owner_id?: string;
+          public_path?: string | null;
           session_id?: string | null;
           status?: Database["public"]["Enums"]["media_status"];
           storage_key?: string;
@@ -950,12 +953,14 @@ export type Database = {
       profiles: {
         Row: {
           avatar_color: string;
+          avatar_path: string | null;
           bio: string | null;
           class_title: string | null;
           created_at: string;
           display_name: string;
           handle: string;
           id: string;
+          is_official: boolean;
           larper_level: number;
           onboarded_at: string | null;
           reminder_time: string | null;
@@ -966,12 +971,14 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           avatar_color?: string;
+          avatar_path?: string | null;
           bio?: string | null;
           class_title?: string | null;
           created_at?: string;
           display_name?: string;
           handle: string;
           id: string;
+          is_official?: boolean;
           larper_level?: number;
           onboarded_at?: string | null;
           reminder_time?: string | null;
@@ -981,12 +988,14 @@ export type Database = {
         };
         Update: {
           avatar_color?: string;
+          avatar_path?: string | null;
           bio?: string | null;
           class_title?: string | null;
           created_at?: string;
           display_name?: string;
           handle?: string;
           id?: string;
+          is_official?: boolean;
           larper_level?: number;
           onboarded_at?: string | null;
           reminder_time?: string | null;

@@ -6,6 +6,10 @@ export type Profile = {
   display_name: string;
   bio: string | null;
   avatar_color: string;
+  /** Photo avatar (object path in the public `official` bucket); null = initials. */
+  avatar_path: string | null;
+  /** larpr-run guide account: labelled, not ranked, cannot be messaged. */
+  is_official: boolean;
   timezone: string;
   reminder_time: string | null;
   onboarded_at: string | null;
@@ -74,7 +78,8 @@ export const kudoLabelsFor = (skill: Pick<Skill, 'kudo_label'>): string[] => [
   'I learned something',
 ];
 
-export type PostMedia = { key: string; kind: 'image' | 'video' };
+/** `publicPath` is set for official guide photos (public bucket, no signed URL). */
+export type PostMedia = { key: string; kind: 'image' | 'video'; publicPath?: string | null };
 
 /** A feed post: a practice session or a Larp Check, normalised for the UI. */
 export type FeedPost = {
@@ -84,11 +89,15 @@ export type FeedPost = {
   authorName: string;
   authorHandle: string;
   authorColor: string;
+  authorAvatarPath: string | null;
+  authorOfficial: boolean;
   authorTier: number;
   skillId: string;
   skillName: string;
   skillLower: string;
   skillColor: string;
+  skillSlug: string | null;
+  skillCategory: SkillCategory | null;
   kudoLabel: string;
   nodeName: string | null;
   landed: boolean;

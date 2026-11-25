@@ -1,8 +1,7 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Art } from '@/src/components/Art';
 import { Avatar } from '@/src/components/Avatar';
 import { Button } from '@/src/components/Button';
 import { EmptyState } from '@/src/components/EmptyState';
@@ -15,14 +14,18 @@ import { PressableScale } from '@/src/components/PressableScale';
 import { Scrim } from '@/src/components/Scrim';
 import { Screen } from '@/src/components/Screen';
 import { Seg } from '@/src/components/Seg';
+import { SkillPhoto } from '@/src/components/SkillPhoto';
 import { PostSkeleton } from '@/src/components/Skeleton';
 import { Wordmark } from '@/src/components/Wordmark';
 import { useUnreadCount } from '@/src/features/activity/hooks';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { useMyCheck, useTodayWindow } from '@/src/features/larpcheck/hooks';
+import { usePostMediaUrl } from '@/src/features/media/public';
 import { useUnreadConversationCount } from '@/src/features/messages/hooks';
+import { blendForYou } from '@/src/features/posts/blend';
 import { useFeed, useStoryPosts } from '@/src/features/posts/hooks';
 import { useMyProfile, useMyStreak, useProfileStats } from '@/src/features/profile/hooks';
+import { usePortfolio } from '@/src/features/trees/hooks';
 import { dayKey, formatClock, formatTime } from '@/src/lib/format';
 import { useNow } from '@/src/lib/useNow';
 import { levelFromXp } from '@/src/gamification/levels';
@@ -83,8 +86,7 @@ function TodayTile({
   label,
   name,
   color,
-  skillColor,
-  seed,
+  post,
   minutes,
   ring,
   onPress,
@@ -93,19 +95,29 @@ function TodayTile({
   label: string;
   name: string;
   color: string | undefined;
-  skillColor: string;
-  seed: string;
+  /** The latest post in the story; the tile shows its photo, or a photo of its skill. */
+  post: FeedPost | undefined;
   minutes: number;
   ring: boolean;
   onPress: () => void;
   accessibilityLabel: string;
 }) {
   const { colors } = useTheme();
+  const media = post?.media[0];
+  const mediaUrl = usePostMediaUrl(media?.kind === 'image' ? media : null);
   return (
     <PressableScale style={styles.story} scale={0.95} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
       <View style={[styles.tileRing, { borderColor: ring ? colors.accent : 'transparent' }]}>
         <View style={[styles.tile, { backgroundColor: colors.surface2 }]}>
-          <Art seed={seed} color={skillColor} quality={0.7} aspectRatio={66 / 90} style={StyleSheet.absoluteFill} />
+          {mediaUrl ? (
+            <Image source={{ uri: mediaUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          ) : post ? (
+            <SkillPhoto
+              skill={{ slug: post.skillSlug, name: post.skillName, category: post.skillCategory }}
+              seed={post.id}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null}
           <Scrim extent={0.55} opacity={0.5} />
           {minutes > 0 ? <Text style={styles.tileMinutes}>{minutes}m</Text> : null}
           <View style={styles.tileAvatar}>
@@ -137,7 +149,7 @@ function StoriesRow({
   const mine = groups.find((g) => g.userId === meId);
   const others = groups.filter((g) => g.userId !== meId);
   const minutesOf = (g: StoryGroup) => g.items.reduce((sum, p) => sum + p.minutes, 0);
-  const latestColor = (g: StoryGroup) => g.items[g.items.length - 1]?.skillColor ?? colors.surface3;
+  const latest = (g: StoryGroup) => g.items[g.items.length - 1];
 
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.stories} contentContainerStyle={styles.storiesContent}>
@@ -146,8 +158,7 @@ function StoriesRow({
           label="Your story"
           name={meName}
           color={meColor}
-          skillColor={latestColor(mine)}
-          seed={`today-${mine.userId}`}
+          post={latest(mine)}
           minutes={minutesOf(mine)}
           ring
           onPress={() => router.push({ pathname: '/story/[userId]', params: { userId: meId! } })}
@@ -174,8 +185,7 @@ function StoriesRow({
           label={g.name.split(' ')[0] ?? g.name}
           name={g.name}
           color={g.color}
-          skillColor={latestColor(g)}
-          seed={`today-${g.userId}`}
+          post={latest(g)}
           minutes={minutesOf(g)}
           ring={!storySeen[`${today}:${g.userId}`]}
           onPress={() => router.push({ pathname: '/story/[userId]', params: { userId: g.userId } })}
@@ -279,6 +289,7 @@ export default function HomeScreen() {
   const setFeedTab = useUiStore((s) => s.setFeedTab);
   const { data: feed, isLoading: feedLoading } = useFeed();
   const { data: storyPosts } = useStoryPosts();
+  const { data: portfolio } = usePortfolio(meId);
 
   const level = levelFromXp(profile?.xp_total ?? 0);
   const showBanner = Boolean(window && !myCheck);
@@ -301,14 +312,18 @@ export default function HomeScreen() {
       .sort((a, b) => (a.userId === meId ? -1 : b.userId === meId ? 1 : 0));
   }, [storyPosts, meId]);
 
+  const mySkillIds = useMemo(() => new Set((portfolio ?? []).map((p) => p.skill_id)), [portfolio]);
+
   const posts = useMemo(() => {
     const all = feed?.posts ?? [];
     if (feedTab === 'following') {
       const ids = new Set([meId, ...(feed?.followingIds ?? [])]);
       return all.filter((p) => ids.has(p.userId));
     }
-    return all;
-  }, [feed, feedTab, meId]);
+    // For You: real posts first; official guide posts only fill the gaps while
+    // the community is still small (see features/posts/blend.ts).
+    return blendForYou(all, mySkillIds);
+  }, [feed, feedTab, meId, mySkillIds]);
 
   return (
     <Screen
@@ -386,7 +401,7 @@ export default function HomeScreen() {
           title={feedTab === 'following' ? 'Your feed is quiet' : 'Nothing here yet'}
           body={
             feedTab === 'following'
-              ? 'Follow people learning your skills to fill this feed.'
+              ? 'Follow people and larpr guides for your skills to fill this feed.'
               : 'New sessions from the community will show up here.'
           }
           action={

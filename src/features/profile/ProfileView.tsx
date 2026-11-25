@@ -10,13 +10,16 @@ import { Card } from '@/src/components/Card';
 import { EmptyState } from '@/src/components/EmptyState';
 import { Heatmap } from '@/src/components/Heatmap';
 import { Icon, type AppIconName } from '@/src/components/Icon';
+import { OfficialPill } from '@/src/components/OfficialPill';
 import { ProgressBar } from '@/src/components/ProgressBar';
 import { Scrim } from '@/src/components/Scrim';
+import { SkillPhoto } from '@/src/components/SkillPhoto';
 import { Seg } from '@/src/components/Seg';
 import { Stamp } from '@/src/components/Stamp';
 import { useSession } from '@/src/features/auth/SessionProvider';
 import { inviteMessage } from '@/src/features/invite/api';
 import { useSignedUrl } from '@/src/features/media/api';
+import { officialMediaUrl, usePostMediaUrl } from '@/src/features/media/public';
 import { useStartConversation } from '@/src/features/messages/hooks';
 import { useSetOpenToFeedback } from '@/src/features/mentorship/hooks';
 import { useSetFollowing, useUserPosts } from '@/src/features/posts/hooks';
@@ -30,8 +33,7 @@ import { tierName, type FeedPost, type Profile, type Skill, type UserSkill } fro
 import { useFollowCounts, useGlowups, useMyProfile, useProfileStats, useVouchMutation, useVouches } from './hooks';
 
 function PostTile({ post }: { post: FeedPost }) {
-  const mediaKey = post.media[0]?.key ?? null;
-  const url = useSignedUrl(mediaKey);
+  const url = usePostMediaUrl(post.media[0]);
   return (
     <Pressable
       style={({ pressed }) => [styles.tile, pressed && { opacity: 0.85 }]}
@@ -41,13 +43,7 @@ function PostTile({ post }: { post: FeedPost }) {
       {url ? (
         <Image source={{ uri: url }} style={styles.tileImage} />
       ) : (
-        <Art
-          seed={post.id}
-          color={post.skillColor}
-          letter={post.skillName}
-          quality={Math.min(0.95, 0.3 + Object.values(post.kudoCounts).reduce((a, b) => a + b, 0) / 20)}
-          aspectRatio={4 / 5}
-        />
+        <SkillPhoto skill={{ slug: post.skillSlug, name: post.skillName, category: post.skillCategory }} seed={post.id} aspectRatio={4 / 5} />
       )}
       {post.minutes > 0 ? <Scrim extent={0.4} opacity={0.45} /> : null}
       {post.kind === 'larp_check' ? (
@@ -256,6 +252,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
 
   if (!profile) return null;
   const p = profile as Profile;
+  const isOfficial = p.is_official;
   // Past ten hours the minutes are noise, and they no longer fit the column.
   const totalMinutes = stats?.totalMinutes ?? 0;
   const practised = totalMinutes >= 600 ? `${Math.round(totalMinutes / 60).toLocaleString()} h` : formatDuration(totalMinutes * 60);
@@ -266,17 +263,19 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
       <View style={styles.header}>
         <View style={styles.player}>
           <View style={styles.playerTop}>
-            <Avatar name={p.display_name} color={p.avatar_color} size={84} />
+            <Avatar name={p.display_name} color={p.avatar_color} uri={officialMediaUrl(p.avatar_path)} size={84} />
             <View style={styles.identity}>
               <Text style={[styles.name, { color: colors.heroInk }]} numberOfLines={1}>
                 {p.display_name}
               </Text>
-              {p.class_title ? (
+              {isOfficial ? <OfficialPill /> : null}
+              {p.class_title && !isOfficial ? (
                 <View style={styles.classRow}>
                   <Icon name="medal" size={13} color={colors.accentStrong} />
                   <Text style={[styles.classTitle, { color: colors.accentStrong }]}>{p.class_title}</Text>
                 </View>
               ) : null}
+              {isOfficial ? null : (
               <View style={styles.levelRow} accessibilityLabel={`Larper level ${level.level}, ${level.current} of ${level.needed} XP`}>
                 <View style={[styles.levelBadge, { backgroundColor: colors.accent }]}>
                   <Text style={[styles.levelBadgeText, { color: colors.accentInk }]}>LV {level.level}</Text>
@@ -288,6 +287,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
                   {level.current}/{level.needed}
                 </Text>
               </View>
+              )}
             </View>
           </View>
           <View style={[styles.stats, { borderColor: colors.line }]}>
@@ -295,7 +295,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
             <View style={[styles.statDivider, { backgroundColor: colors.line }]} />
             <Stat value={`${counts?.following ?? 0}`} label="Following" />
             <View style={[styles.statDivider, { backgroundColor: colors.line }]} />
-            <Stat value={practised} label="Practised" />
+            {isOfficial ? <Stat value={`${(posts ?? []).length}`} label="Posts" /> : <Stat value={practised} label="Practised" />}
           </View>
         </View>
 
@@ -307,7 +307,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
                 <View style={[styles.portfolioDot, { backgroundColor: entry.skills.color }]} />
                 <Text style={[styles.portfolioText, { color: colors.ink }]}>
                   {entry.skills.name}
-                  <Text style={{ color: colors.muted, fontFamily: fonts.body }}> · {tierName(entry.tier)}</Text>
+                  {isOfficial ? null : <Text style={{ color: colors.muted, fontFamily: fonts.body }}> · {tierName(entry.tier)}</Text>}
                 </Text>
               </View>
             ))}
@@ -331,37 +331,41 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
                 loading={setFollowing.isPending}
                 onPress={() => setFollowing.mutate({ userId, follow: !counts?.followedByMe })}
               />
-              <Button
-                title="Message"
-                icon="chat"
-                variant="secondary"
-                size="sm"
-                style={styles.actionBtn}
-                loading={startChat.isPending}
-                onPress={() =>
-                  startChat.mutate(userId, {
-                    onSuccess: (id) => router.push({ pathname: '/messages/[id]', params: { id } }),
-                    onError: (e) => Alert.alert('Could not start chat', e instanceof Error ? e.message : 'Try again.'),
-                  })
-                }
-              />
+              {isOfficial ? null : (
+                <Button
+                  title="Message"
+                  icon="chat"
+                  variant="secondary"
+                  size="sm"
+                  style={styles.actionBtn}
+                  loading={startChat.isPending}
+                  onPress={() =>
+                    startChat.mutate(userId, {
+                      onSuccess: (id) => router.push({ pathname: '/messages/[id]', params: { id } }),
+                      onError: (e) => Alert.alert('Could not start chat', e instanceof Error ? e.message : 'Try again.'),
+                    })
+                  }
+                />
+              )}
             </>
           )}
         </View>
       </View>
 
-      <Seg
-        variant="tabs"
-        options={[
-          { value: 'posts', label: 'Posts', icon: 'grid' },
-          { value: 'glowups', label: 'Glow-ups', icon: 'compare' },
-          { value: 'skills', label: 'Skills', icon: 'medal' },
-        ]}
-        value={tab}
-        onChange={setTab}
-      />
+      {isOfficial ? null : (
+        <Seg
+          variant="tabs"
+          options={[
+            { value: 'posts', label: 'Posts', icon: 'grid' },
+            { value: 'glowups', label: 'Glow-ups', icon: 'compare' },
+            { value: 'skills', label: 'Skills', icon: 'medal' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+      )}
 
-      {tab === 'posts' ? (
+      {isOfficial || tab === 'posts' ? (
         (posts ?? []).length > 0 ? (
           <View style={styles.grid}>
             {Array.from({ length: Math.ceil((posts ?? []).length / 3) }, (_, row) => {
@@ -383,7 +387,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
         )
       ) : null}
 
-      {tab === 'glowups' ? (
+      {!isOfficial && tab === 'glowups' ? (
         <View style={styles.tabBody}>
           {(glowups ?? []).length > 0 ? (
             (glowups ?? []).map((g) => (
@@ -399,7 +403,7 @@ export function ProfileView({ userId, isMe }: ProfileViewProps) {
         </View>
       ) : null}
 
-      {tab === 'skills' ? (
+      {!isOfficial && tab === 'skills' ? (
         <View style={styles.tabBody}>
           {(portfolio ?? []).length > 1 ? (
             <View style={[styles.sphereCard, { backgroundColor: colors.surface2 }]}>
