@@ -94,17 +94,19 @@ stay off the leaderboards.
 
 - **Fade-out:** the For You feed blends guide posts with real ones and drops them once there
   are about 12 real posts (`src/features/posts/blend.ts`). Following feeds are never padded.
-- **Deploy order:** the client selects `avatar_path`, `is_official` and `public_path`, so run
-  `npx supabase db push` **before** shipping the client build. Migration `0014` also creates the
-  launch skill catalog, because production never had approved skills.
-- **Images:** run `npx supabase seed buckets --linked` after the push to upload
-  `supabase/seed-media/official/` into the public `official` bucket (locally, `db reset` does it).
-  Skill photos are bundled in `assets/covers/` (up to three per skill). They are the skill
-  sphere's covers and stand in for any post without a photo of its own, across the feed,
-  stories, Explore and profiles. All of these images are AI-generated. To
-  replace them with licensed photography, overwrite the files with the same names and re-seed.
-- **Still seed-only:** quests, standards, rooms and guilds. Arena and Explore show honest
-  empty states in production until those are created.
+- **Deploys:** Vercel production builds run `scripts/vercel-build.sh`, which applies pending
+  migrations (`supabase db push`) and uploads `supabase/seed-media/official/` to the public
+  `official` bucket before exporting the app, so the client never ships ahead of the schema. A
+  failed migration fails the build and leaves the current deployment live. Preview builds share
+  the production database and only dry-run. Locally, `db reset` does both. Migration `0014`
+  creates the launch skill catalog, because production never had approved skills.
+- **Images:** skill photos are bundled in `assets/covers/` (up to three per skill). They are the
+  skill sphere's covers and stand in for any post without a photo of its own, across the feed,
+  stories, Explore and profiles. All of these images are AI-generated. To replace them with
+  licensed photography, overwrite the files with the same names and redeploy.
+- **Production data:** production holds only the guides and real accounts. `supabase/seed.sql`
+  (the 28 demo users, rooms, guilds and events) is for local development only and must never
+  be run against production. Arena shows empty states for rooms and guilds until real ones exist.
 - **Retiring guides:** `delete from auth.users where email like 'guide-%@guides.larpr.invalid'`
   removes the accounts and their posts.
 
