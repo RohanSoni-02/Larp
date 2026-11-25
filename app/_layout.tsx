@@ -45,7 +45,7 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { session, isLoading } = useSession();
+  const { session, isLoading, passwordRecovery } = useSession();
   const { data: profile, isLoading: profileLoading } = useMyProfile(session?.user?.id);
   const segments = useSegments();
   const { isDark, colors } = useTheme();
@@ -61,10 +61,13 @@ function RootNavigator() {
 
   const inAuthGroup = segments[0] === '(auth)';
   const onInvite = (segments[0] as string | undefined) === 'invite';
+  // Handles its own signed-out state (expired or reused reset link).
+  const onResetPassword = (segments[0] as string | undefined) === 'reset-password';
   const onboarded = Boolean(profile?.onboarded_at);
 
   const parts = segments as unknown as string[];
-  if (!onInvite) {
+  if (!onInvite && !onResetPassword) {
+    if (session && passwordRecovery) return <Redirect href="/reset-password" />;
     if (!session && !inAuthGroup) return <Redirect href="/welcome" />;
     if (session && !onboarded && parts[1] !== 'onboarding') return <Redirect href="/onboarding" />;
     if (session && onboarded && inAuthGroup) return <Redirect href="/" />;

@@ -1,13 +1,10 @@
-import * as Linking from 'expo-linking';
-
+import { siteLink } from '@/src/lib/env';
 import { supabase } from '@/src/lib/supabase';
 import type { PendingInvite } from '@/src/stores/invite';
 
-/** Deep link that opens the invite screen with the inviter + a starter skill. */
+/** Web link that opens the invite screen with the inviter + a starter skill. */
 export function buildInviteLink(handle: string, skillSlug?: string | null): string {
-  return Linking.createURL('/invite', {
-    queryParams: skillSlug ? { from: handle, skill: skillSlug } : { from: handle },
-  });
+  return siteLink('/invite', { from: handle, skill: skillSlug });
 }
 
 export function inviteMessage(name: string, handle: string, skill?: { name: string; slug: string } | null): string {

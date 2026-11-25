@@ -49,6 +49,14 @@ const ExpoSecureStoreAdapter = {
   },
 };
 
+/**
+ * True when this page load came from a password-reset email. Must be read
+ * before the client is created: supabase-js strips the URL hash while restoring
+ * the session and fires PASSWORD_RECOVERY before React has subscribed.
+ */
+export const openedFromRecoveryLink =
+  Platform.OS === 'web' && !isServer && /[#&?]type=recovery(&|$)/.test(window.location.href);
+
 function makeClient(): SupabaseClient {
   if (!isSupabaseConfigured) {
     // Dev mode without a backend: a client pointed at a dead URL. Screens that

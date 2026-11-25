@@ -1,16 +1,19 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 
-import { env } from '@/src/lib/env';
+import { env, siteLink } from '@/src/lib/env';
 import { supabase } from '@/src/lib/supabase';
 
-/** Step 1 of magic link: email a 6-digit code (no redirect URL juggling). */
+/**
+ * Step 1 of magic link: email a 6-digit code. Supabase's default email template
+ * sends a sign-in link rather than the code, so the link needs a real redirect
+ * too, or it falls back to the project's Site URL.
+ */
 export async function sendEmailCode(email: string): Promise<void> {
   const { error } = await supabase.auth.signInWithOtp({
     email: email.trim().toLowerCase(),
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, emailRedirectTo: siteLink('/') },
   });
   if (error) throw error;
 }
@@ -45,7 +48,7 @@ export async function signUpWithPassword(
   const { data, error } = await supabase.auth.signUp({
     email: email.trim().toLowerCase(),
     password,
-    options: { emailRedirectTo: Linking.createURL('/') },
+    options: { emailRedirectTo: siteLink('/') },
   });
   if (error) throw error;
   // With confirmations on, Supabase answers an already-registered address with
@@ -54,6 +57,24 @@ export async function signUpWithPassword(
     throw new Error('An account with this email already exists. Sign in instead.');
   }
   return { needsConfirmation: !data.session };
+}
+
+/**
+ * Forgot password: email a link that signs the user in with a short-lived
+ * recovery session on the web app's reset page. Supabase reports success even
+ * for unknown addresses, so this never reveals who has an account.
+ */
+export async function sendPasswordReset(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo: siteLink('/reset-password'),
+  });
+  if (error) throw error;
+}
+
+/** Set a new password for the signed-in (or recovering) user. */
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
 }
 
 export async function isAppleSignInAvailable(): Promise<boolean> {

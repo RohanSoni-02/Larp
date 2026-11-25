@@ -133,6 +133,16 @@ export default function SignInScreen() {
               onPress={() => run('password', () => signInWithPassword(email, password))}
               style={styles.submit}
             />
+            <Pressable
+              onPress={() =>
+                router.push({ pathname: '/forgot-password', params: emailValid ? { email: email.trim() } : {} })
+              }
+              hitSlop={10}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.link, pressed && { opacity: 0.55 }]}
+            >
+              <Text style={[styles.linkText, { color: colors.accentStrong }]}>Forgot password?</Text>
+            </Pressable>
             {__DEV__ ? (
               <View style={[styles.devHint, { backgroundColor: colors.surface2 }]}>
                 <Text style={[styles.devHintText, { color: colors.muted }]}>
